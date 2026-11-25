@@ -5,8 +5,8 @@ description: Como subir a aplicação com dados de exemplo e percorrer uma tela 
 
 ## Subir
 
-1. Na pasta do código a verificar, carregue os dados de exemplo: `<comando>`
-2. Suba a aplicação em uma porta livre: `<comando, com o lugar da porta>`
+1. Na pasta do código a verificar, carregue os dados de exemplo em um banco só seu, com `BANCO` apontando para um arquivo da pasta temporária recebida: `<comando>`
+2. Suba a aplicação em uma porta livre, com o mesmo `BANCO`: `<comando, com o lugar da porta>`
 3. Pronto quando: <o que aparece na saída ou qual endereço responde>
 
 ## Entrar
@@ -28,4 +28,4 @@ description: Como subir a aplicação com dados de exemplo e percorrer uma tela 
 ## Derrubar
 
 - Encerre a aplicação: `<comando>`
-- Volte os dados ao estado limpo: `<comando>`
+- Apague o banco da pasta temporária. Não limpe dados fora dela: outros verificadores podem estar usando.

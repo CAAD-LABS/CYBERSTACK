@@ -241,7 +241,7 @@ flowchart TD
     REP -.->|terceira tentativa| BLQ["Tarefa bloqueada<br/>volta para você com perguntas"]
 ```
 
-Há dois pontos de disparo em leque: o orquestrador abre um implementador por tarefa independente, e o Gatilho B abre revisor, verificador de tela e segurança ao mesmo tempo sobre o mesmo diff. Entre eles o disparo é em série.
+Há dois pontos de disparo em leque: o orquestrador abre um implementador por tarefa independente, e o Gatilho B abre revisor, verificador de tela e segurança ao mesmo tempo sobre o mesmo diff. Entre eles o disparo é em série. Os três usam a mesma cópia do código, mas cada um sobe a aplicação com banco de exemplo e porta próprios, em uma pasta temporária fora dela, para um não interferir no outro.
 
 O que o orquestrador confere em cada gatilho:
 

@@ -76,9 +76,11 @@ Gatilho B, para disparar a verificação: a saída diz `VEREDITO: APROVADO`, a p
 
 Decida pela lista de arquivos do diff, não só pelo plano. Se o diff toca um caminho das áreas sensíveis de `projeto.md`, a pasta `deploy/` ou o próprio `.cyberstack/projeto.md`, dispare a segurança mesmo que o plano diga não. Se toca HTML, JavaScript ou CSS, dispare o verificador de tela.
 
+Os verificadores trabalham ao mesmo tempo na mesma worktree. Para um não interferir no outro, cada um sobe a aplicação com banco de exemplo próprio e porta própria: crie uma pasta temporária para cada um, fora da worktree, e passe o caminho no despacho. O banco e tudo o que a aplicação gravar ficam nessa pasta. Apague as pastas depois do Gatilho C.
+
 Grave cada saída no arquivo correspondente.
 
-Gatilho C, para marcar a tarefa como aprovada: todos os disparados respondem `VEREDITO: APROVADO` e a worktree não tem nenhuma alteração feita por eles.
+Gatilho C, para marcar a tarefa como aprovada: todos os disparados respondem `VEREDITO: APROVADO` e a worktree não tem nenhuma alteração feita por eles. Alteração é mudança em arquivo versionado ou arquivo novo que o git não ignora.
 
 ## 4. Reprovação
 
@@ -121,7 +123,7 @@ Se a execução chegar ao fim antes das respostas, as perguntas que faltam vão 
 
 ## 5. O que cada subagente recebe
 
-O bloco inteiro da tarefa, copiado do plano, com o identificador e o tipo; caminho absoluto da worktree, da pasta de artefatos e de `projeto.md`; os critérios de aceite da tarefa; para o testador, a entrega do implementador; e, para testador, revisor e segurança, o comando que mostra o diff contra a branch de integração.
+O bloco inteiro da tarefa, copiado do plano, com o identificador e o tipo; caminho absoluto da worktree, da pasta de artefatos e de `projeto.md`; os critérios de aceite da tarefa; para o testador, a entrega do implementador; para testador, revisor e segurança, o comando que mostra o diff contra a branch de integração; e, para revisor, verificador de tela e segurança, a pasta temporária de cada um.
 
 Um subagente começa na pasta do usuário, não na worktree, e o diretório dele não persiste de um comando para o outro. Diga em todo despacho que cada comando começa por `cd <worktree> &&`.
 

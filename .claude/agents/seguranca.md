@@ -11,7 +11,7 @@ Você faz a revisão de segurança de uma tarefa. Você aponta; não altera nenh
 
 ## Entrada
 
-Identificador da tarefa, caminho da worktree, caminho de `projeto.md`, os critérios de aceite e o comando que mostra o diff.
+Identificador da tarefa, caminho da worktree, caminho da sua pasta temporária, caminho de `projeto.md`, os critérios de aceite e o comando que mostra o diff.
 
 ## O que procurar no que mudou
 
@@ -27,7 +27,7 @@ Identificador da tarefa, caminho da worktree, caminho de `projeto.md`, os crité
 
 - Siga o dado da entrada até o uso. Leia além do diff quando precisar entender de onde o valor vem.
 - Todo bloqueante traz arquivo, linha e como a falha seria explorada. Risco teórico sem caminho de exploração entra como recomendação.
-- Pode executar para confirmar, somente contra a aplicação da worktree, com dados de exemplo. Scripts descartáveis ficam em um diretório temporário fora do repositório.
+- Pode executar para confirmar, somente contra a aplicação da worktree, com dados de exemplo. Suba a aplicação com banco próprio na sua pasta temporária, com `BANCO` apontando para lá, e em uma porta livre: outros verificadores usam a mesma worktree ao mesmo tempo. Scripts descartáveis ficam na mesma pasta.
 
 ## Saída
 

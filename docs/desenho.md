@@ -113,7 +113,7 @@ Linhas tracejadas são os caminhos de falha, de espera e de reversão.
 - **Do mais barato ao mais caro.** Cada etapa só roda se a anterior passou.
 - **Testes depois da implementação,** por um agente que parte dos critérios de aceite e não do código.
 - **Todos executam, poucos alteram.** Qualquer agente roda a aplicação e os testes na sua cópia do código. A restrição é sobre o que cada um pode modificar.
-- **Paralelismo por subagentes.** O orquestrador dispara várias cópias do mesmo perfil, cada uma em sua cópia do código. A integração é serial.
+- **Paralelismo por subagentes.** O orquestrador dispara várias cópias do mesmo perfil, cada uma em sua cópia do código. A integração é serial. Um teto em `projeto.md` diz quantas tarefas andam ao mesmo tempo.
 - **Continuidade sem você.** Fim de etapa por condição verificável, limite de tentativas e estado gravado em arquivo.
 - **Entrega automática, com volta garantida.** Quando todos os gatilhos passam, o trabalho vai para a principal e para produção sem esperar você. Toda entrega pode ser desfeita com um comando.
 - **Um único relatório,** em formato fixo, com o desenho do que aconteceu e as dúvidas numeradas.
@@ -247,7 +247,7 @@ O que o orquestrador confere em cada gatilho:
 
 | Gatilho | Dispara | Condição |
 |---|---|---|
-| Tarefa liberada | Um implementador por tarefa, em paralelo | A tarefa não depende de outra ainda pendente. |
+| Tarefa liberada | Um implementador por tarefa, em paralelo | A tarefa não depende de outra ainda pendente e há vaga no teto de tarefas ao mesmo tempo. |
 | A | Testador | O implementador respondeu PRONTO e a pilha existente passa quando o orquestrador roda o comando. |
 | B | Revisor, verificador de tela, segurança | O testador aprovou, a pilha completa passa e ele só alterou arquivos nas pastas de teste. |
 | C | Integração | Todos os disparados aprovaram e nenhum deles alterou o código. |

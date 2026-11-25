@@ -48,9 +48,11 @@ Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `b
 
 ## 2. Disparo das tarefas
 
-Gatilho: tarefa do plano sem dependência pendente.
+Gatilho: tarefa do plano sem dependência pendente, com vaga no teto de `Tarefas ao mesmo tempo` de `projeto.md`.
 
 Para cada tarefa liberada, crie a worktree a partir da branch de integração, instale nela as dependências, crie a pasta de artefatos e o `estado.json`. Dispare um `implementador` por tarefa, todos na mesma mensagem, para que rodem em paralelo. Cada tarefa avança pelo seu próprio caminho, sem esperar as outras.
+
+Respeite o teto. Conta como em andamento a tarefa em `implementando`, `testando` ou `verificando`; a bloqueada, que espera o usuário, não conta. O que passar do teto fica na fila, na ordem do plano, e cada tarefa que termina abre vaga para a próxima. Sem a linha em `projeto.md`, o teto é 4.
 
 ## 3. Caminho de cada tarefa
 

@@ -38,7 +38,10 @@ O sistema em produção é também o ambiente em que o usuário testa. Quando to
 
 ## Cópias de trabalho
 
+Cada tarefa em andamento tem a sua cópia do código, instala o ambiente e roda a pilha inteira. O teto abaixo diz quantas andam juntas; as outras esperam na fila.
+
 - Arquivo com as contas de teste usadas nas cópias de trabalho:
+- Tarefas ao mesmo tempo: 4
 
 ## Interface
 

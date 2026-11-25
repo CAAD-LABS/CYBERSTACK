@@ -32,7 +32,14 @@ if [ -z "$alvo" ] && [ -n "$banco_a_restaurar" ]; then
   alvo="$atual"
 elif [ -z "$alvo" ]; then
   [ -f "$REGISTRO" ] || { echo "Sem registro de implantações. Informe o commit." >&2; exit 1; }
-  alvo=$(awk -F'\t' -v atual="$atual" '$4 == "ok" && $2 != atual { c = $2 } END { print c }' "$REGISTRO")
+  # A anterior é a que estava no ar antes de a atual entrar pela primeira vez. Assim,
+  # rodar de novo volta mais uma versão, em vez de devolver a que acabou de sair.
+  # Se a atual não está no registro, vale a última implantação bem-sucedida.
+  alvo=$(awk -F'\t' -v atual="$atual" '
+    $4 != "ok" { next }
+    $2 == atual && !achou { achou = 1; alvo = antes }
+    !achou { antes = $2 }
+    END { print (achou ? alvo : antes) }' "$REGISTRO")
   [ -n "$alvo" ] || { echo "Não há implantação anterior bem-sucedida no registro. Informe o commit." >&2; exit 1; }
 fi
 alvo=$(git rev-parse "$alvo^{commit}")
@@ -64,9 +71,9 @@ else
 fi
 
 git fetch --quiet origin || true
-if [ "$alvo" != "$(git rev-parse "origin/$RAMO")" ]; then
+if [ "$alvo" != "$atual" ] && [ "$alvo" != "$(git rev-parse "origin/$RAMO")" ]; then
   echo
   echo "A branch $RAMO ainda contém o código que saiu do ar."
-  echo "Antes da próxima feature, o /fluxo desfaz esse código na $RAMO. Para fazer à mão:"
-  echo "  git revert --no-edit ${alvo:0:8}..origin/$RAMO"
+  echo "Antes da próxima feature, o /fluxo devolve à $RAMO o conteúdo que está em produção. Para fazer à mão:"
+  echo "  git push origin \"\$(git commit-tree ${alvo:0:8}^{tree} -p origin/$RAMO -m 'Volta a $RAMO ao conteúdo de ${alvo:0:8}')\":$RAMO"
 fi

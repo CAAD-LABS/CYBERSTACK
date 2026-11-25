@@ -26,7 +26,7 @@ Antes de rodar testes ou subir a aplicação, descubra pela leitura para onde ap
    Se faltar uma das três, o item vai para "Suspeitos".
 5. **Estrutura.** Arquivo em lugar errado, duplicação, pasta com papéis misturados, nomes inconsistentes. Proponha só o que tem ganho claro. Reorganização por gosto não entra.
 6. **O que falta.** Arquivos base, configuração de lint ou de teste, dados de exemplo, contas de teste.
-7. **Entrega.** Como o sistema roda hoje em produção: se há serviço que sobe com a máquina, onde fica o arquivo do banco, se o caminho dele vem de variável de ambiente ou está fixo no código, se o banco está em modo WAL, se existe um endereço que responde 200 quando o sistema está de pé e se as migrações podem rodar duas vezes.
+7. **Entrega.** Como o sistema roda hoje em produção: se há serviço que sobe com a máquina, onde fica o arquivo do banco, se o caminho dele vem de variável de ambiente ou está fixo no código, se o banco está em modo WAL, se existe um endereço que responde 200 quando o sistema está de pé, se as migrações podem rodar duas vezes, quais são os perfis de usuário do sistema e se existe um comando que cria uma conta de teste para cada um.
 8. **Riscos.** Segredo ou credencial versionada, e qualquer caminho pelo qual um teste ou uma cópia de trabalho abriria o banco de produção. Informe arquivo e linha, sem reproduzir valores.
 
 ## Limites
@@ -77,6 +77,7 @@ Sua mensagem final, exatamente neste formato:
 - Banco: <caminho> (<por variável de ambiente | fixo em arquivo:linha>), modo <WAL | outro>
 - Endereço de verificação: <caminho que responde 200, ou "não existe">
 - Migrações: <podem rodar duas vezes | não: motivo | não há>
+- Perfis de usuário: <lista>. Contas de teste: <comando que cria uma por perfil, ou "não existe">
 - Fora do padrão: <itens a adequar, ou "nada">
 
 ## Riscos

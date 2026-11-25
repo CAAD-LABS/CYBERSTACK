@@ -35,6 +35,7 @@ O sistema em produção é também o ambiente em que o usuário testa. Quando to
 - Comando de implantação, que recebe o commit: cd <pasta de produção> && deploy/implantar.sh
 - Comando de reversão: cd <pasta de produção> && deploy/reverter.sh
 - Endereço do sistema:
+- Arquivo com as contas de teste de produção, fora do repositório:
 
 ## Cópias de trabalho
 

@@ -466,6 +466,7 @@ Dúvidas comuns chegam juntas no relatório, enquanto os agentes seguem com a me
 - **Você testa em produção,** depois da entrega, seguindo o roteiro guiado do relatório.
 - **Roteiro guiado:** nasce dos critérios de aceite e já foi percorrido pelo verificador de tela antes da entrega.
 - **Não gostou do que viu:** o relatório traz o comando de reversão, ou você pede a correção em um novo `/fluxo`.
+- **Contas de teste em produção:** uma para cada perfil de usuário, para você testar o fluxo de qualquer categoria e não só a sua. Quem cria é um comando do projeto, rodado pela implantação depois da migração: ele cria as que faltam e não mexe nas que já existem. As credenciais ficam guardadas em um arquivo fora do repositório, para reuso, e o relatório diz em cada passo com a conta de qual perfil entrar. Perfil novo ganha a conta na mesma entrega em que nasce.
 - **Os agentes nunca tocam o banco de produção.** Cada cópia de trabalho sobe a aplicação em uma porta temporária, com banco próprio criado pelos dados de exemplo e com contas de teste.
 - **Integrações externas** ficam em modo de teste nas cópias de trabalho: pagamento e envio de mensagem simulados ou em sandbox.
 

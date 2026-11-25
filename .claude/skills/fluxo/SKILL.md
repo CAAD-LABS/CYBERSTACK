@@ -183,7 +183,7 @@ Com o gatilho fechado, a entrega não espera ninguém:
    - 3: a produção está fora do ar. Pare tudo e avise o usuário na hora, com a saída do comando.
    - 1: o script parou antes de trocar o código, por falha de rede, commit não encontrado, erro na configuração ou na cópia do banco. Nada mudou em produção. Rode o comando mais uma vez. Se repetir, grave a saída em `entrega.md` e siga para o relatório como não entregue: a principal fica à frente da produção e o trabalho vai ao ar na próxima entrega.
    - Qualquer outro: confira o commit na pasta de produção e se o endereço do sistema responde, grave em `entrega.md` o que encontrou e pare para avisar o usuário.
-4. Grave em `entrega.md`: o resultado, o commit no ar, o commit anterior, o endereço do sistema e o comando de reversão de `projeto.md`.
+4. Grave em `entrega.md`: o resultado, o commit no ar, o commit anterior, o endereço do sistema, o comando de reversão e o arquivo das contas de teste de produção, de `projeto.md`. Se a saída da implantação avisou que o comando das contas de teste falhou, grave isso também.
 
 ## 10. Relatório
 

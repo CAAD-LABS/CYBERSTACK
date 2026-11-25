@@ -14,16 +14,17 @@ set -euo pipefail
 principal() {
   cd "$(dirname "$0")/.."
 
-  # Lê a configuração do commit que está na pasta e entrega o caminho do banco, como
-  # variável de ambiente, aos comandos de instalar, migrar e reiniciar. O ensaio em
-  # subshell impede que um erro no arquivo derrube o script no meio da implantação.
+  # Lê a configuração do commit que está na pasta e entrega o caminho do banco e o do
+  # arquivo das contas de teste, como variáveis de ambiente, aos comandos do projeto.
+  # O ensaio em subshell impede que um erro no arquivo derrube o script no meio da
+  # implantação.
   configurar() {
     if ! ( source deploy/config.env ) > /dev/null 2>&1; then
       echo "deploy/config.env tem erro e não pôde ser lido." >&2
       return 1
     fi
     source deploy/config.env
-    export BANCO
+    export BANCO CONTAS_ARQUIVO
     if [ -z "${REINICIAR:-}" ] || { [ -z "${SAUDE_CMD:-}" ] && [ -z "${SAUDE_URL:-}" ]; }; then
       echo "deploy/config.env sem REINICIAR ou sem nenhuma verificação (SAUDE_CMD, SAUDE_URL)." >&2
       return 1
@@ -62,12 +63,15 @@ principal() {
 
   # colocar <commit> [sem-migrar]: põe o commit na pasta, com a configuração dele, e
   # reinicia. Na volta automática a migração não roda: a do commit anterior já está
-  # aplicada, e uma migração que falha não pode impedir a volta.
+  # aplicada, e uma migração que falha não pode impedir a volta. O comando das contas
+  # de teste roda depois da migração, só na ida, e a falha dele não derruba a entrega.
   colocar() {
     git checkout --quiet --detach "$1" &&
     configurar &&
     { [ -z "${INSTALAR:-}" ] || eval "$INSTALAR"; } &&
     { [ "${2:-}" = "sem-migrar" ] || [ -z "${MIGRAR:-}" ] || eval "$MIGRAR"; } &&
+    { [ "${2:-}" = "sem-migrar" ] || [ -z "${CONTAS_DE_TESTE:-}" ] || eval "$CONTAS_DE_TESTE" ||
+      echo "Aviso: o comando das contas de teste falhou. A implantação segue." >&2; } &&
     eval "$REINICIAR"
   }
 

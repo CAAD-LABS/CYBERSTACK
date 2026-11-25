@@ -55,6 +55,9 @@ copias() { find "$T/dados/copias" -name '*.db' | wc -l; }
 notas() {
   python3 -c 'import sqlite3, sys; print(sqlite3.connect(sys.argv[1]).execute("select count(*) from notas").fetchone()[0])' "${1:-$T/dados/app.db}"
 }
+contas_de_teste() {
+  python3 -c 'import sqlite3, sys; print(sqlite3.connect(sys.argv[1]).execute("select count(*) from usuarios where login like ?", ("teste-%",)).fetchone()[0])' "$T/dados/app.db" 2> /dev/null || echo 0
+}
 grava_nota() {
   python3 -c 'import sqlite3, sys; c = sqlite3.connect(sys.argv[1]); c.execute("insert into notas (texto) values (?)", (sys.argv[2],)); c.commit()' "$T/dados/app.db" "$1"
 }
@@ -120,6 +123,8 @@ BACKUPS="$T/dados/copias"
 MANTER_BACKUPS=3
 INSTALAR=""
 MIGRAR=""
+CONTAS_DE_TESTE=""
+CONTAS_ARQUIVO="$T/dados/contas-de-teste.md"
 REINICIAR="$T/reiniciar.sh"
 SAUDE_CMD=""
 SAUDE_URL="$URL/saude"
@@ -419,6 +424,53 @@ confere "a segunda avisa que esperou a vez" contem "$saida" "Esperando"
 confere "uma só começou depois que a outra acabou" igual "$(tr '\n' ' ' < "$T/marcas")" "inicio fim inicio fim "
 confere "a segunda partiu do commit que a primeira deixou no ar" contem "$saida" "Anterior: ${V20:0:8}"
 confere "no fim está no ar a versão da segunda" contem "$(saude)" "ok v21"
+
+caso "21. Contas de teste: criadas na implantação e guardadas para reuso"
+ajusta_config INSTALAR 'INSTALAR=""'
+cat > "$T/dev/contas.py" <<'EOF'
+import os, secrets, sqlite3
+
+# Cria uma conta de teste para cada perfil de usuário e não mexe nas que já existem.
+pasta = os.path.dirname(os.environ["BANCO"])
+if os.path.exists(os.path.join(pasta, "contas-falha")):
+    raise SystemExit("falha simulada no comando das contas")
+con = sqlite3.connect(os.environ["BANCO"])
+con.execute("create table if not exists usuarios (login text primary key, perfil text, senha text)")
+novas = []
+for perfil in ("operador", "tecnico", "administrador"):
+    login = f"teste-{perfil}"
+    if con.execute("select 1 from usuarios where login = ?", (login,)).fetchone():
+        continue
+    senha = secrets.token_urlsafe(12)
+    con.execute("insert into usuarios values (?, ?, ?)", (login, perfil, senha))
+    novas.append((login, perfil, senha))
+con.commit()
+con.close()
+if novas:
+    arquivo = os.environ["CONTAS_ARQUIVO"]
+    with open(arquivo, "a") as f:
+        for login, perfil, senha in novas:
+            f.write(f"{perfil}: {login} / {senha}\n")
+    os.chmod(arquivo, 0o600)
+EOF
+ajusta_config CONTAS_DE_TESTE 'CONTAS_DE_TESTE="python3 contas.py"'
+V22=$(versao v22)
+implantar
+confere "sai com código 0" igual "$codigo" 0
+confere "há uma conta de teste para cada perfil no banco de produção" igual "$(contas_de_teste)" 3
+confere "as credenciais ficam guardadas fora do repositório" igual "$(grep -c "teste-" "$T/dados/contas-de-teste.md" 2> /dev/null)" 3
+confere "só o dono lê o arquivo das credenciais" igual "$(stat -c %a "$T/dados/contas-de-teste.md" 2> /dev/null)" 600
+GUARDADAS=$(cat "$T/dados/contas-de-teste.md" 2> /dev/null)
+V23=$(versao v23)
+implantar
+confere "na implantação seguinte as contas e as senhas continuam as mesmas" igual "$(cat "$T/dados/contas-de-teste.md" 2> /dev/null)" "$GUARDADAS"
+touch "$T/dados/contas-falha"
+V24=$(versao v24)
+implantar
+confere "falha no comando das contas não derruba a entrega" igual "$codigo" 0
+confere "mas a saída avisa" contem "$saida" "contas de teste"
+confere "a versão nova está no ar" contem "$(saude)" "ok v24"
+rm "$T/dados/contas-falha"
 
 # ---------------------------------------------------------------- resultado
 

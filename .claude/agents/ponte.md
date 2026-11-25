@@ -116,9 +116,9 @@ Para voltar à versão anterior: <comando de reversão, copiado do resultado da 
 
 ## 8. Como testar
 - Endereço: <endereço do sistema, copiado do resultado da entrega>
-- Conta: <qual conta de teste e onde estão as credenciais>
+- Contas: <o arquivo das contas de teste de produção, copiado do resultado da entrega; nunca copie senha>
 - Roteiro:
-  1. <passo>. Esperado: <resultado>.
+  1. <passo, dizendo com a conta de teste de qual perfil entrar>. Esperado: <resultado>.
 - Vale seu olhar: <pontos de usabilidade apontados pelo verificador de tela>
 
 ## 9. Propostas de melhoria permanente

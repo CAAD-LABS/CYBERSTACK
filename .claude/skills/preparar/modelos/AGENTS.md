@@ -30,6 +30,7 @@ Este é o único arquivo de orientação geral do repositório. Mantenha abaixo 
 - Banco SQLite3 em modo WAL. O caminho do arquivo vem da variável de ambiente `BANCO`, nunca fixo no código.
 - Front em HTML e JavaScript, sem etapa de build, servido pela própria aplicação.
 - A aplicação responde 200 em `<caminho de verificação>` quando está de pé.
+- Um comando do projeto cria uma conta de teste para cada perfil de usuário e não mexe nas que já existem. Perfil novo entra nesse comando na mesma tarefa em que nasce.
 
 ## Banco de dados
 

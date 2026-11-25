@@ -33,6 +33,16 @@ principal() {
   REGISTRO="${REGISTRO:-$BACKUPS/implantacoes.log}"
   mkdir -p "$BACKUPS"
 
+  # Uma implantação por vez: a segunda espera a primeira acabar. O flock segura a
+  # trava e roda este mesmo script; com --close ela não passa para o serviço que
+  # o script reinicia. A variável evita travar duas vezes quando o reverter.sh,
+  # que já está com a trava, chama este script.
+  trava="$BACKUPS/.trava"
+  if [ "${TRAVA_DE_IMPLANTACAO:-}" != "$trava" ]; then
+    flock --nonblock "$trava" true || echo "Outra implantação em andamento. Esperando ela terminar." >&2
+    TRAVA_DE_IMPLANTACAO="$trava" exec flock --close "$trava" deploy/implantar.sh "$@"
+  fi
+
   # Saudável é passar em duas verificações seguidas: serviço que sobe e cai logo em
   # seguida passa na primeira e não na segunda.
   saudavel() {

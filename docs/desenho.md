@@ -344,6 +344,8 @@ flowchart TD
 
 Na primeira implantação, o registro ganha também o commit que já estava no ar, para a primeira entrega ter para onde voltar.
 
+Só uma implantação roda por vez em cada pasta de produção. Se duas entregas do mesmo projeto chegarem juntas, a segunda espera a primeira acabar e parte do que ela deixou no ar. A reversão entra na mesma fila.
+
 **Se a verificação falha,** o script volta sozinho ao commit que estava no ar e reinicia, sem rodar migração de novo. O orquestrador então devolve à principal o conteúdo que está no ar, com um commit novo, para ela não ficar com código que falhou.
 
 **Se o script para antes de trocar o código,** por falha de rede ou da cópia do banco, o orquestrador tenta mais uma vez. Se repetir, relata como não entregue e a principal fica à frente da produção até a próxima entrega.

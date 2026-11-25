@@ -11,7 +11,7 @@ Feita para projetos em Python, com banco SQLite3 e front em HTML e JavaScript, r
 
 O desenho completo, com os diagramas do fluxo, dos gatilhos e da entrega, está em [docs/desenho.md](docs/desenho.md).
 
-Situação: desenho fechado e definições escritas. A stack ainda não rodou em um projeto real. Os dois scripts de implantação são exercitados por `testes/implantacao.sh`, com 74 conferências.
+Situação: desenho fechado e definições escritas. A stack ainda não rodou em um projeto real. Os dois scripts de implantação são exercitados por `testes/implantacao.sh`, com 80 conferências.
 
 ## O que tem aqui
 

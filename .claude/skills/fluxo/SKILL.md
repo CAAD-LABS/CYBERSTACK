@@ -189,7 +189,7 @@ Com o gatilho fechado, a entrega não espera ninguém:
 ## Regras
 
 - Decisão ambígua: escolha a leitura mais razoável, registre em `decisoes.md` e continue. Não pergunte no meio da execução; a exceção é a tarefa bloqueada, na seção 4.
-- Comando demorado, como a pilha de testes e a implantação, roda com tempo limite maior que os dois minutos padrão. Nunca interrompa uma implantação no meio.
+- Comando demorado, como a pilha de testes e a implantação, roda com tempo limite maior que os dois minutos padrão. Nunca interrompa uma implantação no meio. Se outra entrega do mesmo projeto estiver implantando, o comando espera a vez dele: deixe esperar.
 - Pare e pergunte somente se a produção ficar fora do ar, se todas as tarefas estiverem bloqueadas ou se a próxima ação for irreversível e não estiver prevista na seção Entrega. A pergunta de tarefa bloqueada não é parada: as outras tarefas seguem.
 - Merge na principal, envio e implantação acontecem só na seção Entrega e na sincronização da preparação, e só pelos comandos de `projeto.md`. Você nunca força um merge, nunca altera o banco de produção à mão e nunca dispara envio de mensagem ou cobrança.
 - Quando o usuário responder às dúvidas do relatório, as respostas viram novas tarefas e percorrem o mesmo caminho. Proposta de checagem automática aprovada também vira tarefa. Resposta a pergunta de tarefa bloqueada não vira tarefa nova: reabre, reescreve ou retira a própria tarefa, pela seção 4.

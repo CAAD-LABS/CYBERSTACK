@@ -19,6 +19,14 @@ if [ "${1:-}" = "--listar" ]; then
   exit 0
 fi
 
+# Uma operação por vez na pasta de produção, com a mesma trava do implantar.sh.
+mkdir -p "$BACKUPS"
+trava="$BACKUPS/.trava"
+if [ "${TRAVA_DE_IMPLANTACAO:-}" != "$trava" ]; then
+  flock --nonblock "$trava" true || echo "Outra implantação em andamento. Esperando ela terminar." >&2
+  TRAVA_DE_IMPLANTACAO="$trava" exec flock --close "$trava" deploy/reverter.sh "$@"
+fi
+
 banco_a_restaurar=""
 if [ "${1:-}" = "--restaurar-banco" ]; then
   banco_a_restaurar="${2:?informe o arquivo da cópia do banco}"

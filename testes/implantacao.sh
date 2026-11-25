@@ -402,6 +402,24 @@ confere "sai com código 2" igual "$codigo" 2
 confere "diz o motivo" contem "$saida" "sem REINICIAR"
 confere "o sistema segue na versão anterior" contem "$(saude)" "ok v14"
 
+caso "20. Duas implantações ao mesmo tempo entram em fila"
+ajusta_config REINICIAR "REINICIAR=\"$T/reiniciar.sh\""
+ajusta_config INSTALAR "INSTALAR='echo inicio >> \"$T/marcas\"; sleep 1.2; echo fim >> \"$T/marcas\"'"
+V20=$(versao v20)
+V21=$(versao v21)
+(cd "$T/prod" && deploy/implantar.sh "$V20") > "$T/saida-primeira" 2>&1 &
+PRIMEIRA=$!
+sleep 0.4
+implantar "$V21"
+wait "$PRIMEIRA"
+codigo_primeira=$?
+confere "a primeira sai com código 0" igual "$codigo_primeira" 0
+confere "a segunda sai com código 0" igual "$codigo" 0
+confere "a segunda avisa que esperou a vez" contem "$saida" "Esperando"
+confere "uma só começou depois que a outra acabou" igual "$(tr '\n' ' ' < "$T/marcas")" "inicio fim inicio fim "
+confere "a segunda partiu do commit que a primeira deixou no ar" contem "$saida" "Anterior: ${V20:0:8}"
+confere "no fim está no ar a versão da segunda" contem "$(saude)" "ok v21"
+
 # ---------------------------------------------------------------- resultado
 
 echo

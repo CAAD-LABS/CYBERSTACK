@@ -266,7 +266,7 @@ Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não
 | planejador | opus | high | Nada | No início de cada feature, dispensado em pedido pequeno. E quando uma tarefa bloqueia. |
 | implementador | opus | medium | Código e documentação junto do código | Um por tarefa. |
 | testador | sonnet | high | Só as pastas de teste | Depois do Gatilho A. |
-| revisor | opus | high | Nada | Depois do Gatilho B, sempre. |
+| revisor | opus | high | Nada | Depois do Gatilho B, sempre. E como árbitro de teste contestado. |
 | verificador-tela | sonnet | medium | Nada | Depois do Gatilho B, se a tarefa toca interface. |
 | seguranca | opus | xhigh | Nada | Depois do Gatilho B, se a tarefa toca área sensível. |
 | documentador | sonnet | medium | Só a documentação compartilhada | Uma vez, depois da integração. |
@@ -282,9 +282,9 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 
 - **Inspetor.** Examina o repositório inteiro e entrega o diagnóstico. Comando que ele não rodou não entra como confirmado. Não roda nada que aponte para o banco ou para as integrações de produção.
 - **Planejador.** Lê o código, roda o sistema se precisar, escreve os critérios de aceite e divide em tarefas. Duas tarefas só são independentes se não tocam os mesmos arquivos. Quando uma tarefa bloqueia, analisa o bloqueio e escreve as perguntas para você.
-- **Implementador.** Roda a pilha antes de começar para ter a linha de base, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature.
+- **Implementador.** Roda a pilha antes de começar para ter a linha de base, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature. Pode contestar um teste do testador que considere errado.
 - **Testador.** Lê os critérios de aceite antes do diff e escreve pelo menos um teste por critério. Se acha defeito, reprova com o teste que falha; não conserta o código.
-- **Revisor.** Procura critério não atendido, defeito, teste que só confirma a implementação, código desnecessário, documentação de módulo desatualizada e alteração indevida nos arquivos de orientação. Todo bloqueante tem arquivo, linha e cenário.
+- **Revisor.** Procura critério não atendido, defeito, teste que só confirma a implementação, código desnecessário, documentação de módulo desatualizada e alteração indevida nos arquivos de orientação. Todo bloqueante tem arquivo, linha e cenário. Também arbitra teste contestado.
 - **Verificador de tela.** Sobe a aplicação da tarefa em uma porta temporária e a usa pelo navegador, como uma pessoa, com as contas de teste. Tira uma captura por passo e tenta também os caminhos errados. Não consulta banco, API nem código.
 - **Segurança.** Segue o dado da entrada até o uso. Só bloqueia com caminho de exploração.
 - **Documentador.** Lê o diff integrado e corrige a documentação compartilhada. Na limpeza, corrige também o que o diagnóstico apontou. Se um arquivo de orientação ficou desatualizado, propõe a mudança em vez de fazer.
@@ -296,6 +296,8 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 2. A tarefa volta ao implementador com o motivo e nada mais.
 3. O caminho é refeito desde o Gatilho A.
 4. Na terceira tentativa a tarefa é marcada como bloqueada. As outras continuam, menos as que dependem dela, que ficam bloqueadas também.
+
+**Teste contestado.** O implementador não mexe em teste, mas pode contestar um teste do testador que considere errado. O revisor arbitra, uma vez por teste, com o critério de aceite como régua. Teste errado volta ao testador para correção, e a reprovação que ele causou deixa de contar. Teste certo volta ao implementador, sem nova contestação. Se o critério não decide, a tarefa bloqueia e a pergunta vai para você.
 
 **Tarefa bloqueada volta para você, na hora.** O planejador analisa o bloqueio e escreve o que travou e a sequência de perguntas necessárias para prosseguir ou para chegar a outra solução. O orquestrador faz essas perguntas a você, uma por vez, sem parar as outras tarefas. Com as respostas, a tarefa é reaberta com tentativas novas, reescrita pelo planejador ou retirada do pedido. Se a execução terminar antes de você responder, as perguntas vão no relatório e nada é entregue até lá.
 
@@ -394,6 +396,7 @@ Tudo o que acontece fica em arquivo, para a execução poder ser retomada e para
       tela.md                    saída do verificador de tela
       seguranca.md               saída do revisor de segurança
       capturas/                  uma imagem por passo do roteiro
+      arbitragem.md              decisão do árbitro, se um teste for contestado
       bloqueio.md                o que travou e as perguntas para você, se a tarefa bloquear
       respostas.md               o que você respondeu
 .claude/worktrees/

@@ -16,7 +16,7 @@ Você é o orquestrador. Você divide o trabalho, dispara subagentes, confere os
 - `AGENTS.md`: comandos e padrões do projeto. Você e todos os subagentes já o recebem.
 - `.cyberstack/projeto.md`: configuração do fluxo (pastas de teste, documentação compartilhada, áreas sensíveis, entrega).
 - `.cyberstack/execucoes/<slug>/`: pasta desta execução. Contém `plano.md`, `linha-de-base.md`, `decisoes.md`, `aprendizado.md`, `documentacao.md`, `entrega.md`, `relatorio.md` e uma pasta por tarefa.
-- `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente (`entrega.md`, `testes.md`, `revisao.md`, `tela.md`, `seguranca.md`, pasta `capturas`). Se a tarefa bloquear, também `bloqueio.md` e `respostas.md`.
+- `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente (`entrega.md`, `testes.md`, `revisao.md`, `tela.md`, `seguranca.md`, pasta `capturas`). Se a tarefa bloquear, também `bloqueio.md` e `respostas.md`; se um teste for contestado, `arbitragem.md`.
 - `.claude/worktrees/<slug>-integracao/`: cópia do código onde a integração acontece.
 - `.claude/worktrees/<slug>-<tarefa>/`: cópia do código de cada tarefa.
 - Branches: `fluxo/<slug>/integracao` e `fluxo/<slug>/<tarefa>`.
@@ -91,6 +91,17 @@ Quando quem errou foi o agente e não o código, a tarefa não volta ao implemen
 Um `VEREDITO: BLOQUEADO` do verificador de tela por falta de navegador não reprova a tarefa: registre em `decisoes.md` que a verificação de tela não foi feita e siga.
 
 Saída sem a linha de `RESULTADO` ou de `VEREDITO` quer dizer que o agente parou no teto de turnos antes de concluir. Isso não é reprovação: retome o mesmo agente para ele terminar. Se depois de duas retomadas a linha ainda não vier, marque a tarefa como `bloqueada`, com esse motivo.
+
+### Teste contestado
+
+O implementador pode responder `RESULTADO: CONTESTADO` quando voltou por um teste do testador que ele considera errado. Isso não é reprovação e não soma tentativa.
+
+1. Dispare o `revisor` como árbitro, com os critérios de aceite, a falha apontada pelo testador, a contestação e o comando do diff, pedindo a arbitragem. Grave a saída em `arbitragem.md`, na pasta da tarefa, e acrescente o resultado em `aprendizado.md`.
+2. Teste que o árbitro deu como errado: dispare o `testador` para corrigi-lo, com a decisão do árbitro, e desconte de `tentativas` a reprovação que esse teste causou.
+3. Teste que o árbitro deu como certo: devolva a tarefa ao `implementador` com a decisão. Esse teste não pode ser contestado de novo.
+4. Critério que não decide: marque a tarefa como `bloqueada`, com a pergunta do árbitro como motivo, e siga por "Tarefa bloqueada".
+
+Se a mesma contestação tiver teste errado e teste certo, o testador corrige os errados primeiro e depois a tarefa volta ao implementador pelos certos. Em qualquer caso, o caminho recomeça do Gatilho A.
 
 ### Tarefa bloqueada
 

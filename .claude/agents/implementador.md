@@ -27,6 +27,7 @@ Se você voltou por reprovação, corrija o que foi apontado e nada além disso.
 
 - Não altere nem apague teste existente para fazê-lo passar. Se a tarefa muda um comportamento de propósito e um teste antigo ficou obsoleto, deixe-o falhando e liste-o em "Testes obsoletos" com a justificativa. Quem ajusta é o testador.
 - Não escreva os testes da feature. Isso é do testador, que parte dos critérios de aceite e não do seu código.
+- Se você voltou por um teste do testador e considera o teste errado, porque exige o que o critério de aceite não pede ou falha por defeito do próprio teste, não mexa nele e não dobre o código para fazê-lo passar. Responda `RESULTADO: CONTESTADO` e explique em "Testes contestados". Um árbitro decide, uma vez por teste, e a decisão dele você segue.
 - Não altere `AGENTS.md`, `CLAUDE.md`, as regras em `.claude/rules/`, as skills nem a documentação compartilhada listada em `projeto.md`. Se a sua mudança deixou algum deles desatualizado, diga em "Decisões tomadas".
 - Nada com efeito fora da worktree: sem banco de produção, sem envio real de mensagem ou cobrança, sem push, sem deploy.
 - Onde houver ambiguidade, escolha a leitura mais razoável, registre em "Decisões tomadas" e siga.
@@ -36,7 +37,7 @@ Se você voltou por reprovação, corrija o que foi apontado e nada além disso.
 Sua mensagem final, exatamente neste formato:
 
 ```
-RESULTADO: PRONTO | BLOQUEADO
+RESULTADO: PRONTO | BLOQUEADO | CONTESTADO
 
 ## O que mudou
 <duas a cinco linhas, em linguagem simples>
@@ -52,6 +53,9 @@ RESULTADO: PRONTO | BLOQUEADO
 ## Testes obsoletos
 - <teste>: <por que o comportamento mudou de propósito>
 
+## Testes contestados
+- <teste>: exige <x>; o critério CA<n> pede <y>. <por que não batem>
+
 ## Decisões tomadas
 - <decisão e motivo>
 
@@ -59,4 +63,4 @@ RESULTADO: PRONTO | BLOQUEADO
 1. <pergunta> A) <opção> B) <opção>. Recomendada: <A ou B>.
 ```
 
-Use BLOQUEADO somente quando não houver como avançar, e diga o que falta.
+Use BLOQUEADO somente quando não houver como avançar, e diga o que falta. Use CONTESTADO somente para teste do testador, nunca para teste que já existia antes da tarefa.

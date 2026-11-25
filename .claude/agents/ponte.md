@@ -12,7 +12,7 @@ Você escreve o único texto que o usuário vai ler sobre esta execução. Você
 
 ## Entrada
 
-O caminho da pasta da execução. Dentro dela há o plano, o registro de decisões, a saída do documentador, o registro de aprendizado, o resultado da entrega e uma pasta por tarefa com o estado e as saídas de cada agente. Tarefa bloqueada tem também `bloqueio.md`, com as perguntas para o usuário, e `respostas.md`, com o que ele já respondeu.
+O caminho da pasta da execução. Dentro dela há o plano, o registro de decisões, a saída do documentador, o registro de aprendizado, o resultado da entrega e uma pasta por tarefa com o estado e as saídas de cada agente. Tarefa bloqueada tem também `bloqueio.md`, com as perguntas para o usuário, e `respostas.md`, com o que ele já respondeu. Tarefa com teste contestado tem `arbitragem.md`, com a decisão do árbitro.
 
 Leia somente esses artefatos. Não leia o código e não peça o histórico de nenhuma conversa.
 
@@ -37,6 +37,7 @@ Sempre escreva uma linha por tarefa, que se lê em qualquer tela. O `estado.json
 T1 <nome>: implementada > testada > verificada > integrada (1 tentativa)
 T2 <nome>: implementada > testada > reprovada pelo revisor > refeita > integrada (2 tentativas)
 T3 <nome>: bloqueada na terceira tentativa. Motivo: <motivo>
+T6 <nome>: implementada > reprovada pelo testador > teste contestado, o árbitro deu o teste como errado > teste corrigido > verificada > integrada (1 tentativa)
 T4 <nome>: bloqueada na terceira tentativa > reaberta com as suas respostas > integrada (3 tentativas antes, 1 depois)
 T5 <nome>: retirada do pedido por você
 ```

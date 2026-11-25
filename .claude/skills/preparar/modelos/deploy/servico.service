@@ -1,0 +1,27 @@
+# Unidade systemd do sistema. Reinicia o processo se ele cair e sobe sozinha
+# quando a máquina liga.
+#
+# Instalação, uma vez, com sudo:
+#   sudo cp deploy/<servico>.service /etc/systemd/system/<servico>.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now <servico>
+#
+# Para a implantação reiniciar o serviço sem pedir senha, crie /etc/sudoers.d/<servico> com:
+#   <usuario> ALL=(root) NOPASSWD: /usr/bin/systemctl restart <servico>
+
+[Unit]
+Description=<nome do sistema>
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+User=<usuario>
+WorkingDirectory=<pasta de produção>
+Environment=BANCO=<pasta de dados>/<arquivo>.db
+ExecStart=<pasta de produção>/.venv/bin/python <arquivo de entrada>
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

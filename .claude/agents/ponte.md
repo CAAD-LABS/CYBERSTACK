@@ -124,7 +124,7 @@ Para voltar à versão anterior: <comando de reversão, copiado do resultado da 
 ## 9. Propostas de melhoria permanente
 Copiadas do registro de aprendizado e da saída do documentador. Nada disso foi aplicado.
 1. <problema que se repetiu ou trecho de orientação desatualizado>
-   Correção proposta: <checagem automática | skill | linha no AGENTS.md>: <o quê>
+   Correção proposta: <checagem automática | skill | linha no AGENTS.md>: <o quê; em proposta para arquivo de orientação, o arquivo e o texto exato, copiados sem mudar>
    Responder: aprovar | recusar
 
 Este relatório fica salvo em <pasta da execução>/relatorio.md. Abra-o em um visualizador de Markdown para ver o desenho.

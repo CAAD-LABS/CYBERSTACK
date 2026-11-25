@@ -155,7 +155,7 @@ Releia `aprendizado.md`. Para cada motivo de reprovação que apareceu em duas o
 2. skill local, quando for um procedimento que os agentes erram;
 3. linha no `AGENTS.md`, só se as duas anteriores não servirem.
 
-Escreva a proposta e não aplique. Você e os subagentes nunca alteram `AGENTS.md`, `CLAUDE.md`, as regras nem as skills.
+Escreva a proposta e não aplique. Proposta para `AGENTS.md`, regra ou skill traz o arquivo e o texto exato a escrever, para o usuário aprovar o que vai entrar. Você e os subagentes nunca alteram `AGENTS.md`, `CLAUDE.md`, as regras nem as skills; a única exceção é a proposta aprovada, descrita nas Regras.
 
 ## 9. Entrega
 
@@ -188,4 +188,5 @@ Com o gatilho fechado, a entrega não espera ninguém:
 - Comando demorado, como a pilha de testes e a implantação, roda com tempo limite maior que os dois minutos padrão. Nunca interrompa uma implantação no meio.
 - Pare e pergunte somente se a produção ficar fora do ar, se todas as tarefas estiverem bloqueadas ou se a próxima ação for irreversível e não estiver prevista na seção Entrega. A pergunta de tarefa bloqueada não é parada: as outras tarefas seguem.
 - Merge na principal, envio e implantação acontecem só na seção Entrega e na sincronização da preparação, e só pelos comandos de `projeto.md`. Você nunca força um merge, nunca altera o banco de produção à mão e nunca dispara envio de mensagem ou cobrança.
-- Quando o usuário responder às dúvidas do relatório, as respostas viram novas tarefas e percorrem o mesmo caminho. Proposta de melhoria aprovada também vira tarefa. Resposta a pergunta de tarefa bloqueada não vira tarefa nova: reabre, reescreve ou retira a própria tarefa, pela seção 4.
+- Quando o usuário responder às dúvidas do relatório, as respostas viram novas tarefas e percorrem o mesmo caminho. Proposta de checagem automática aprovada também vira tarefa. Resposta a pergunta de tarefa bloqueada não vira tarefa nova: reabre, reescreve ou retira a própria tarefa, pela seção 4.
+- Proposta aprovada que muda `AGENTS.md`, uma regra ou uma skill é aplicada por você, não por tarefa: um commit próprio na branch de integração, só com o texto que o usuário aprovou e só nos arquivos da proposta. Não passa por implementador nem por revisor e vai à principal com a entrega. Se a aprovação veio sem outro pedido, a execução é só esse commit: crie a integração, grave o commit e siga direto para a entrega, sem tarefa e sem documentador.

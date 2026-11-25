@@ -262,7 +262,7 @@ Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não
 
 | Perfil | Modelo | Esforço | Altera | Quando entra |
 |---|---|---|---|---|
-| Orquestrador (`/fluxo` e `/preparar`) | opus | high | Artefatos; no `/preparar`, os arquivos base | Sempre. É a sessão principal. |
+| Orquestrador (`/fluxo` e `/preparar`) | opus | high | Artefatos; no `/preparar`, os arquivos base; a orientação, só com proposta que você aprovou | Sempre. É a sessão principal. |
 | inspetor | opus | high | Nada | Uma vez por projeto, no `/preparar`. |
 | planejador | opus | high | Nada | No início de cada feature, dispensado em pedido pequeno. E quando uma tarefa bloqueia. |
 | implementador | opus | medium | Código e documentação junto do código | Um por tarefa. |
@@ -480,7 +480,7 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 - **Skills locais.** Depois das duas criadas na preparação, uma skill nova só nasce quando um agente errou o mesmo procedimento duas vezes. Se o procedimento cabe em um script, a skill apenas manda rodá-lo.
 - **Documentação em dia.** A que fica junto do código é atualizada pelo implementador e cobrada pelo revisor. A compartilhada é atualizada pelo documentador, uma vez, depois da integração, para tarefas paralelas não conflitarem no mesmo arquivo.
 - **Aprendizado.** Motivo de reprovação repetido em duas tarefas vira proposta de correção, nesta ordem de preferência: checagem automática, skill, linha no `AGENTS.md`.
-- **Ninguém edita a orientação sozinho.** Fora do `/preparar`, `AGENTS.md`, `CLAUDE.md`, regras e skills só mudam com a sua aprovação, pela seção de propostas do relatório.
+- **Ninguém edita a orientação sozinho.** Fora do `/preparar`, `AGENTS.md`, `CLAUDE.md`, regras e skills só mudam com a sua aprovação, pela seção de propostas do relatório. A proposta traz o texto exato, e quem aplica a que você aprovou é o orquestrador, em um commit próprio, sem implementador nem revisor. Proposta de checagem automática aprovada vira tarefa comum.
 
 ## O que continua com você
 

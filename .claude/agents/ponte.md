@@ -30,7 +30,7 @@ Leia somente esses artefatos. Não leia o código e não peça o histórico de n
 
 A seção "Como foi a execução" mostra o caminho que as tarefas percorreram de fato, tirado do plano, dos `estado.json` e do registro de aprendizado. Não desenhe nada que não esteja nos artefatos.
 
-Sempre escreva uma linha por tarefa, que se lê em qualquer tela:
+Sempre escreva uma linha por tarefa, que se lê em qualquer tela. O `estado.json` conta reprovações: tarefa integrada com `tentativas` em 0 passou na primeira tentativa. Escreva o número de tentativas como reprovações mais um; na bloqueada por reprovação, é o próprio número.
 
 ```
 T1 <nome>: implementada > testada > verificada > integrada (1 tentativa)
@@ -45,7 +45,7 @@ No desenho:
 - um nó por tarefa, com o nome e o número de tentativas;
 - tarefas que partiram juntas saem do nó do plano; tarefa dependente sai da tarefa de que dependia;
 - seta tracejada para um nó de bloqueio, com o motivo em poucas palavras;
-- as tarefas integradas chegam ao nó de integração, seguido de documentação e ambiente de teste, se ocorreram.
+- as tarefas integradas chegam ao nó de integração, seguido de documentação, se ocorreu, e de um nó com o resultado da entrega: no ar, não entregue ou voltou à versão anterior.
 
 Exemplo de uma execução com três tarefas, em que T3 dependia de T1 e T2 foi bloqueada:
 
@@ -58,7 +58,7 @@ flowchart LR
     B["Bloqueada<br/>teste de exportação falha"]
     I["Integração"]
     D["Documentação"]
-    A["Ambiente de teste"]
+    A["Não entregue<br/>fica na branch de integração"]
     P --> T1
     P --> T2
     T1 --> T3

@@ -55,7 +55,9 @@ Todo plano de limpeza tem estes critérios de aceite, além dos específicos:
 - nenhum comportamento observável muda;
 - nenhum arquivo fora da lista da tarefa é alterado.
 
-Tarefas que tocam os mesmos arquivos dependem uma da outra. Remoções em áreas distintas podem ser independentes.
+O primeiro e o terceiro são critérios de processo: quem confere é o orquestrador, pela pilha e pela lista de arquivos do commit, e eles não pedem teste novo.
+
+Tarefas que tocam os mesmos arquivos dependem uma da outra. Toda tarefa de adequação, remoção ou estrutura depende das tarefas `Tipo: testes` da área que ela toca: a ordem acima não basta, porque o `/fluxo` dispara junto tudo o que não tem dependência. Remoções em áreas distintas podem ser independentes entre si.
 
 Fica fora do plano: os "Suspeitos", que viram dúvida para o usuário, e os "Riscos", que são dele para resolver.
 
@@ -93,9 +95,10 @@ Mostre ao usuário exatamente isto e pare:
 ## 6. Para continuar
 1. Revise `AGENTS.md`, `.cyberstack/projeto.md` e `deploy/config.env` e complete o que ficou em branco.
 2. Ajuste `.cyberstack/preparacao/plano.md` se quiser tirar ou incluir algo.
-3. Faça commit dos arquivos base.
-4. Instale o serviço, uma vez, com os comandos que estão no topo de `deploy/<serviço>.service`. É isso que faz o sistema subir sozinho quando a máquina liga e voltar se o processo cair.
-5. Rode: /fluxo executar o plano em .cyberstack/preparacao/plano.md
+3. Faça commit dos arquivos base e envie para o remoto, se houver.
+4. Crie a pasta de produção no caminho que você escreveu em `projeto.md`: um clone do repositório, com `.venv` e o banco no caminho de `deploy/config.env`.
+5. Instale o serviço, uma vez, com os comandos que estão no topo de `deploy/<serviço>.service`. É isso que faz o sistema subir sozinho quando a máquina liga e voltar se o processo cair.
+6. Rode: /fluxo executar o plano em .cyberstack/preparacao/plano.md
 ```
 
 Seção sem conteúdo recebe "Nada".

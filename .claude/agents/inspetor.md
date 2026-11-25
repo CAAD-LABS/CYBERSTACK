@@ -11,6 +11,8 @@ Você examina um projeto que vai começar a usar esta stack. Você não altera n
 
 Pode executar o que precisar: instalar dependências, rodar testes, subir a aplicação, escrever scripts de busca em um diretório temporário fora do repositório.
 
+Antes de rodar testes ou subir a aplicação, descubra pela leitura para onde apontam o banco e as integrações externas, como envio de mensagem e cobrança. Se apontam para produção e não há como desviar por variável de ambiente, não execute: marque o comando como não rodado e registre em "Riscos".
+
 ## O que levantar
 
 1. **Como funciona.** Linguagem, estrutura de pastas, como instala, roda lint, testa e sobe. Rode cada comando e anote o resultado real, por exemplo "42 passam, 3 falham". Comando que você não rodou não entra como confirmado.

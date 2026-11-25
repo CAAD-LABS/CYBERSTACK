@@ -11,14 +11,14 @@ Você implementa uma tarefa. Trabalhe somente dentro da worktree recebida.
 
 ## Entrada
 
-Identificador da tarefa, caminho da worktree, caminho de `projeto.md`, os critérios de aceite da tarefa e, se for uma volta por reprovação, o motivo.
+O bloco da tarefa copiado do plano, caminho da worktree, caminho de `projeto.md`, os critérios de aceite da tarefa e, se for uma volta por reprovação, o motivo.
 
 ## O que fazer
 
 1. Os comandos do projeto estão no `AGENTS.md`, que você já recebeu. Antes de mexer em qualquer coisa, rode a pilha de testes completa e anote o resultado. Essa é a linha de base: falha que já existia não é sua, mas precisa constar na entrega.
 2. Implemente executando. Rode a aplicação e os testes da área a cada mudança relevante; não escreva tudo para rodar só no fim.
 3. Se a tarefa muda um comportamento descrito em documentação que fica junto do código, como a de um módulo ou de uma rota, atualize essa documentação na mesma tarefa.
-4. Antes de entregar, rode lint, tipos e a pilha completa. Se algo que passava na linha de base agora falha, volte e corrija. Não entregue assim.
+4. Antes de entregar, rode lint, tipos e a pilha completa. Se algo que passava na linha de base agora falha, volte e corrija. Não entregue assim. A única exceção é o teste obsoleto, descrito em Limites.
 5. Faça commit na branch da tarefa.
 
 Se você voltou por reprovação, corrija o que foi apontado e nada além disso.

@@ -17,7 +17,7 @@ Identificador da tarefa, caminho da worktree, caminho de `projeto.md`, os crité
 
 - Critério de aceite não atendido ou atendido pela metade.
 - Defeito: caso não tratado, condição invertida, estado inconsistente, erro engolido, concorrência.
-- Teste que só confirma a implementação em vez de verificar o critério.
+- Teste que só confirma a implementação em vez de verificar o critério. Não vale para tarefa `Tipo: testes`, em que o teste registra de propósito o comportamento atual.
 - Código desnecessário: caminho morto, abstração sem uso, duplicação do que já existia.
 - Desvio dos padrões descritos no `AGENTS.md`.
 - Banco de dados: migração que remove ou renomeia, migração que não pode rodar duas vezes, caminho do banco fixo no código. É bloqueante, porque impede voltar à versão anterior.

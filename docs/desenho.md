@@ -156,11 +156,12 @@ O `/preparar` não mexe em código. Ele para na proposta e espera você, porque 
 
 **Plano de limpeza,** nesta ordem:
 
-1. Rede de segurança: testes que registram o comportamento atual das áreas sem teste que serão tocadas.
-2. Adequação à entrega: o que estiver fora do padrão, como caminho do banco fixo no código, banco fora do modo WAL ou falta do endereço de verificação.
-3. Remoção de código morto, em grupos coesos, cada tarefa com a lista exata do que sai.
-4. Estrutura: movimentos e junções de arquivos.
-5. Documentação: corrigida no fim pelo documentador, a partir do diagnóstico.
+1. Banco fora do alcance: se o código abre o banco por um caminho fixo, a adequação desse caminho é a primeira tarefa, sozinha, e todo o resto depende dela. É a única mudança feita sem rede de segurança, porque um teste gravando no banco de produção é pior que uma mudança pequena sem teste.
+2. Rede de segurança: testes que registram o comportamento atual das áreas sem teste que serão tocadas.
+3. Adequação à entrega: o que mais estiver fora do padrão, como banco fora do modo WAL ou falta do endereço de verificação.
+4. Remoção de código morto, em grupos coesos, cada tarefa com a lista exata do que sai.
+5. Estrutura: movimentos e junções de arquivos.
+6. Documentação: corrigida no fim pelo documentador, a partir do diagnóstico.
 
 Toda tarefa de limpeza tem três critérios fixos: a pilha de testes dá o mesmo resultado de antes, nenhum comportamento observável muda e nenhum arquivo fora da lista é alterado. Remoção, adequação e estrutura dependem das tarefas de teste da mesma área, para a rede de segurança existir antes da mudança.
 
@@ -255,7 +256,7 @@ O que o orquestrador confere em cada gatilho:
 
 O orquestrador não aceita relato: ele mesmo roda o comando de teste e olha a lista de arquivos de cada commit. "A pilha passa" quer dizer que não há falha além das que já existiam antes da execução, medidas por ele na branch de integração. Tela e segurança são disparadas pelo que o diff toca, não só pelo que o plano previu.
 
-Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não passa pelo implementador: começa direto no testador.
+Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não passa pelo implementador: começa direto no testador. Tarefa `Tipo: banco`, que tira do código o caminho fixo do banco, vai sozinha antes de todas, e nada roda antes dela.
 
 ## Perfis
 

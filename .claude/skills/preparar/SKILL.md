@@ -43,11 +43,12 @@ Regras:
 
 Escreva `.cyberstack/preparacao/plano.md` no mesmo formato de plano do `planejador`, com critérios de aceite e tarefas, nesta ordem:
 
-1. **Rede de segurança.** Para cada área sem teste que a limpeza vai tocar, uma tarefa com a linha `- Tipo: testes`, que registra o comportamento atual, certo ou errado. Nada é removido de uma área sem teste.
-2. **Adequação à entrega.** Uma tarefa para cada item que o diagnóstico marcou como fora do padrão na seção "Entrega": caminho do banco fixo no código, banco fora do modo WAL, falta do endereço de verificação, migração que não pode rodar duas vezes.
-3. **Remoção de código morto.** Somente os itens de "Candidatos à remoção". Uma tarefa por grupo coeso. Cada tarefa lista exatamente o que sai.
-4. **Estrutura.** Uma tarefa por movimento ou junção, com a lista de arquivos e as referências a atualizar.
-5. **Documentação.** A documentação desatualizada ou órfã não vira tarefa: o documentador corrige no fim, a partir do diagnóstico.
+1. **Banco fora do alcance.** Se o diagnóstico mostra o caminho do banco fixo no código, ou outro caminho pelo qual um teste ou uma cópia de trabalho abriria o banco de produção, a adequação que resolve isso é a primeira tarefa do plano, sozinha, com a linha `- Tipo: banco`, e todas as outras dependem dela. É a única mudança feita sem rede de segurança: um teste gravando no banco de produção é pior que uma mudança pequena sem teste. Ela muda só o necessário, e os critérios dela são: o caminho do banco vem da variável `BANCO`; sem a variável, a aplicação para com erro e não abre banco nenhum; os testes passam a rodar em banco próprio.
+2. **Rede de segurança.** Para cada área sem teste que a limpeza vai tocar, uma tarefa com a linha `- Tipo: testes`, que registra o comportamento atual, certo ou errado. Nada é removido de uma área sem teste.
+3. **Adequação à entrega.** Uma tarefa para cada um dos outros itens que o diagnóstico marcou como fora do padrão na seção "Entrega": banco fora do modo WAL, falta do endereço de verificação, migração que não pode rodar duas vezes.
+4. **Remoção de código morto.** Somente os itens de "Candidatos à remoção". Uma tarefa por grupo coeso. Cada tarefa lista exatamente o que sai.
+5. **Estrutura.** Uma tarefa por movimento ou junção, com a lista de arquivos e as referências a atualizar.
+6. **Documentação.** A documentação desatualizada ou órfã não vira tarefa: o documentador corrige no fim, a partir do diagnóstico.
 
 Todo plano de limpeza tem estes critérios de aceite, além dos específicos:
 
@@ -55,11 +56,11 @@ Todo plano de limpeza tem estes critérios de aceite, além dos específicos:
 - nenhum comportamento observável muda;
 - nenhum arquivo fora da lista da tarefa é alterado.
 
-O primeiro e o terceiro são critérios de processo: quem confere é o orquestrador, pela pilha e pela lista de arquivos do commit, e eles não pedem teste novo.
+O primeiro e o terceiro são critérios de processo: quem confere é o orquestrador, pela pilha e pela lista de arquivos do commit, e eles não pedem teste novo. A tarefa `Tipo: banco` não tem o primeiro: a pilha não roda antes dela.
 
-Tarefas que tocam os mesmos arquivos dependem uma da outra. Toda tarefa de adequação, remoção ou estrutura depende das tarefas `Tipo: testes` da área que ela toca: a ordem acima não basta, porque o `/fluxo` dispara junto tudo o que não tem dependência. Remoções em áreas distintas podem ser independentes entre si.
+Tarefas que tocam os mesmos arquivos dependem uma da outra. Fora a `Tipo: banco`, que vem antes de tudo, toda tarefa de adequação, remoção ou estrutura depende das tarefas `Tipo: testes` da área que ela toca: a ordem acima não basta, porque o `/fluxo` dispara junto tudo o que não tem dependência. Remoções em áreas distintas podem ser independentes entre si.
 
-Fica fora do plano: os "Suspeitos", que viram dúvida para o usuário, e os "Riscos", que são dele para resolver.
+Fica fora do plano: os "Suspeitos", que viram dúvida para o usuário, e os demais "Riscos", que são dele para resolver.
 
 ## 4. Proposta
 
@@ -76,6 +77,7 @@ Mostre ao usuário exatamente isto e pare:
 - Não criado: <arquivo e o que faltou>
 
 ## 3. Plano de limpeza
+- Antes de tudo: <adequação do caminho do banco, ou "não precisa">
 - Rede de segurança: <n> tarefas de teste em <áreas>
 - Adequação à entrega: <itens>
 - Remoção: <n> itens. <os maiores, em uma linha>

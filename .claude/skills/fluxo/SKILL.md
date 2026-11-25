@@ -43,7 +43,7 @@ Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `b
    Sincronizar é criar um commit que devolve à principal o conteúdo exato do commit em produção: `git commit-tree <produção>^{tree} -p <principal> -m "Volta a principal ao conteúdo de <produção>"`. Não use `git revert` de um intervalo: ele falha quando há merge no meio, e a integração produz merges. Confira que o conteúdo ficou idêntico (`git diff --quiet <produção> <commit novo>`), leve o commit à principal do jeito que `projeto.md` indica e implante. O conteúdo é o mesmo; só o registro muda. Se a conferência falhar, pare e avise o usuário.
 
    Grave o commit de sincronização em `decisoes.md`. Se o pedido for corrigir o que saiu do ar, a primeira tarefa do plano desfaz esse commit na integração (`git revert <commit de sincronização>`), para o trabalho recomeçar de onde estava; diga isso ao planejador.
-4. Use como base a ponta da principal conferida no passo anterior, a do remoto se houver. Crie a branch `fluxo/<slug>/integracao` a partir dela, já em uma worktree própria. Uma worktree nova não traz o `.venv`: rode nela o comando de instalar dependências do `AGENTS.md`. Depois rode a pilha completa e grave o resultado, com os nomes dos testes que falham, em `linha-de-base.md`. Crie também `decisoes.md` e `aprendizado.md`, vazios.
+4. Use como base a ponta da principal conferida no passo anterior, a do remoto se houver. Crie a branch `fluxo/<slug>/integracao` a partir dela, já em uma worktree própria. Uma worktree nova não traz o `.venv`: rode nela o comando de instalar dependências do `AGENTS.md`. Depois rode a pilha completa e grave o resultado, com os nomes dos testes que falham, em `linha-de-base.md`. Antes de rodar, veja se o plano do pedido começa por uma tarefa `Tipo: banco`: se começa, não rode nada ainda, porque o código abre o banco de produção, e meça a linha de base quando essa tarefa integrar. Crie também `decisoes.md` e `aprendizado.md`, vazios.
 5. Se o pedido aponta para um plano já escrito, como o do `/preparar`, copie-o para `plano.md` e não dispare o planejador. Caso contrário, dispare o `planejador`, com o caminho da worktree de integração, e grave a saída em `plano.md`. Para um pedido pequeno e localizado, escreva você mesmo um plano de uma tarefa, com critérios de aceite, no mesmo formato.
 
 ## 2. Disparo das tarefas
@@ -55,6 +55,8 @@ Para cada tarefa liberada, crie a worktree a partir da branch de integração, i
 ## 3. Caminho de cada tarefa
 
 Tarefa com a linha `Tipo: testes` no plano não passa pelo implementador: comece pelo testador, e o Gatilho A não se aplica. Se ela for reprovada, a volta também é para o testador.
+
+Tarefa com a linha `Tipo: banco` tira do código o caminho fixo do banco. Ela vai sozinha, antes de todas as outras, e nada roda antes dela: diga ao implementador que não execute a pilha nem a aplicação antes de fazer a mudança. O Gatilho A dela exige `RESULTADO: PRONTO` e a pilha rodando com `BANCO` apontando para um arquivo da worktree; como ainda não há linha de base, falha de teste que já existia não reprova, e quem julga a mudança são o testador e o revisor. Quando ela integrar, rode a pilha na worktree de integração, grave `linha-de-base.md` e só então libere as outras tarefas.
 
 Em todos os gatilhos, "a pilha passa" quer dizer que não há falha além das que estão em `linha-de-base.md`. Vale a linha de base que você mediu, não a do relato de um agente.
 

@@ -15,7 +15,7 @@ O bloco da tarefa copiado do plano, caminho da worktree, caminho de `projeto.md`
 
 ## O que fazer
 
-1. Os comandos do projeto estão no `AGENTS.md`, que você já recebeu. Antes de mexer em qualquer coisa, rode a pilha de testes completa e anote o resultado. Essa é a linha de base: falha que já existia não é sua, mas precisa constar na entrega.
+1. Os comandos do projeto estão no `AGENTS.md`, que você já recebeu. Antes de mexer em qualquer coisa, rode a pilha de testes completa e anote o resultado. Essa é a linha de base: falha que já existia não é sua, mas precisa constar na entrega. Em tarefa `Tipo: banco`, não rode a pilha nem a aplicação antes da mudança: o código ainda abre o banco de produção. Faça a mudança pela leitura e só depois execute, com `BANCO` apontando para um arquivo dentro da worktree.
 2. Implemente executando. Rode a aplicação e os testes da área a cada mudança relevante; não escreva tudo para rodar só no fim.
 3. Se a tarefa muda um comportamento descrito em documentação que fica junto do código, como a de um módulo ou de uma rota, atualize essa documentação na mesma tarefa.
 4. Antes de entregar, rode lint, tipos e a pilha completa. Se algo que passava na linha de base agora falha, volte e corrija. Não entregue assim. A única exceção é o teste obsoleto, descrito em Limites.

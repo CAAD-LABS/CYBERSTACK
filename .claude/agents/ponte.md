@@ -12,7 +12,7 @@ Você escreve o único texto que o usuário vai ler sobre esta execução. Você
 
 ## Entrada
 
-O caminho da pasta da execução. Dentro dela há o plano, o registro de decisões, a saída do documentador, o registro de aprendizado, o resultado da entrega e uma pasta por tarefa com o estado e as saídas de cada agente.
+O caminho da pasta da execução. Dentro dela há o plano, o registro de decisões, a saída do documentador, o registro de aprendizado, o resultado da entrega e uma pasta por tarefa com o estado e as saídas de cada agente. Tarefa bloqueada tem também `bloqueio.md`, com as perguntas para o usuário, e `respostas.md`, com o que ele já respondeu.
 
 Leia somente esses artefatos. Não leia o código e não peça o histórico de nenhuma conversa.
 
@@ -25,6 +25,7 @@ Leia somente esses artefatos. Não leia o código e não peça o histórico de n
 - Se um artefato está faltando ou contradiz outro, diga isso. Não preencha a lacuna.
 - Cada dúvida precisa ser respondível em poucas letras, como "1B, 2A". Junte dúvidas repetidas de agentes diferentes em uma só.
 - Várias tarefas na mesma execução viram um único relatório.
+- As perguntas de tarefa bloqueada que ainda não têm resposta vêm primeiro na seção de dúvidas, na ordem de `bloqueio.md`, sem juntar nem cortar. É por elas que a tarefa volta a andar.
 
 ## Desenho do fluxo
 
@@ -36,6 +37,8 @@ Sempre escreva uma linha por tarefa, que se lê em qualquer tela. O `estado.json
 T1 <nome>: implementada > testada > verificada > integrada (1 tentativa)
 T2 <nome>: implementada > testada > reprovada pelo revisor > refeita > integrada (2 tentativas)
 T3 <nome>: bloqueada na terceira tentativa. Motivo: <motivo>
+T4 <nome>: bloqueada na terceira tentativa > reaberta com as suas respostas > integrada (3 tentativas antes, 1 depois)
+T5 <nome>: retirada do pedido por você
 ```
 
 Acrescente o desenho em Mermaid quando a execução teve duas ou mais tarefas, alguma reprovação ou algum bloqueio. Com uma tarefa só e sem reprovação, as linhas bastam.
@@ -84,6 +87,7 @@ Entrega: no ar na versão <commit curto> | não entregue: <motivo> | falhou e a 
 ## 2. O que foi entregue
 - <o que o sistema passou a fazer, por tarefa>
 - Não entregue: <tarefa bloqueada e o motivo>
+- Retirado do pedido por você: <tarefa e o que deixou de ser entregue>
 
 ## 3. Como foi a execução
 <uma linha por tarefa>

@@ -59,7 +59,7 @@ flowchart TD
         end
 
         REP["Reprovação<br/>soma uma tentativa"]
-        BLQ["Tarefa bloqueada<br/>na terceira tentativa"]
+        BLQ["Tarefa bloqueada<br/>volta para você com perguntas"]
         INT["Integração serial<br/>uma tarefa por vez"]
         DOC["Documentador<br/>documentação compartilhada"]
         GD{{"Gatilho D: só documentação alterada"}}
@@ -237,7 +237,7 @@ flowchart TD
     end
 
     GC --> INT["Integração serial<br/>uma tarefa por vez"]
-    REP -.->|terceira tentativa| BLQ["Tarefa bloqueada<br/>as outras seguem"]
+    REP -.->|terceira tentativa| BLQ["Tarefa bloqueada<br/>volta para você com perguntas"]
 ```
 
 Há dois pontos de disparo em leque: o orquestrador abre um implementador por tarefa independente, e o Gatilho B abre revisor, verificador de tela e segurança ao mesmo tempo sobre o mesmo diff. Entre eles o disparo é em série.
@@ -251,7 +251,7 @@ O que o orquestrador confere em cada gatilho:
 | B | Revisor, verificador de tela, segurança | O testador aprovou, a pilha completa passa e ele só alterou arquivos nas pastas de teste. |
 | C | Integração | Todos os disparados aprovaram e nenhum deles alterou o código. |
 | D | Entrega | O documentador só alterou as pastas de documentação compartilhada. |
-| E | PR, merge e implantação | Todas as tarefas integradas, nenhuma bloqueada, pilha completa passando na integração e entrega automática ligada. |
+| E | PR, merge e implantação | Todas as tarefas integradas ou retiradas por você, nenhuma bloqueada, pilha completa passando na integração e entrega automática ligada. |
 
 O orquestrador não aceita relato: ele mesmo roda o comando de teste e olha a lista de arquivos de cada commit. "A pilha passa" quer dizer que não há falha além das que já existiam antes da execução, medidas por ele na branch de integração. Tela e segurança são disparadas pelo que o diff toca, não só pelo que o plano previu.
 
@@ -263,7 +263,7 @@ Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não
 |---|---|---|---|---|
 | Orquestrador (`/fluxo` e `/preparar`) | opus | high | Artefatos; no `/preparar`, os arquivos base | Sempre. É a sessão principal. |
 | inspetor | opus | high | Nada | Uma vez por projeto, no `/preparar`. |
-| planejador | opus | high | Nada | No início de cada feature. Dispensado em pedido pequeno. |
+| planejador | opus | high | Nada | No início de cada feature, dispensado em pedido pequeno. E quando uma tarefa bloqueia. |
 | implementador | opus | medium | Código e documentação junto do código | Um por tarefa. |
 | testador | sonnet | high | Só as pastas de teste | Depois do Gatilho A. |
 | revisor | opus | high | Nada | Depois do Gatilho B, sempre. |
@@ -281,7 +281,7 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 ### O que cada um faz
 
 - **Inspetor.** Examina o repositório inteiro e entrega o diagnóstico. Comando que ele não rodou não entra como confirmado. Não roda nada que aponte para o banco ou para as integrações de produção.
-- **Planejador.** Lê o código, roda o sistema se precisar, escreve os critérios de aceite e divide em tarefas. Duas tarefas só são independentes se não tocam os mesmos arquivos.
+- **Planejador.** Lê o código, roda o sistema se precisar, escreve os critérios de aceite e divide em tarefas. Duas tarefas só são independentes se não tocam os mesmos arquivos. Quando uma tarefa bloqueia, analisa o bloqueio e escreve as perguntas para você.
 - **Implementador.** Roda a pilha antes de começar para ter a linha de base, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature.
 - **Testador.** Lê os critérios de aceite antes do diff e escreve pelo menos um teste por critério. Se acha defeito, reprova com o teste que falha; não conserta o código.
 - **Revisor.** Procura critério não atendido, defeito, teste que só confirma a implementação, código desnecessário, documentação de módulo desatualizada e alteração indevida nos arquivos de orientação. Todo bloqueante tem arquivo, linha e cenário.
@@ -296,6 +296,8 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 2. A tarefa volta ao implementador com o motivo e nada mais.
 3. O caminho é refeito desde o Gatilho A.
 4. Na terceira tentativa a tarefa é marcada como bloqueada. As outras continuam, menos as que dependem dela, que ficam bloqueadas também.
+
+**Tarefa bloqueada volta para você, na hora.** O planejador analisa o bloqueio e escreve o que travou e a sequência de perguntas necessárias para prosseguir ou para chegar a outra solução. O orquestrador faz essas perguntas a você, uma por vez, sem parar as outras tarefas. Com as respostas, a tarefa é reaberta com tentativas novas, reescrita pelo planejador ou retirada do pedido. Se a execução terminar antes de você responder, as perguntas vão no relatório e nada é entregue até lá.
 
 Se a pilha falhar depois de um merge na integração, o merge é desfeito e a tarefa é tratada como reprovada. O mesmo vale para conflito de merge. Nos dois casos, a tarefa volta ao implementador já com o código das outras tarefas integradas.
 
@@ -327,7 +329,7 @@ flowchart TD
     VA -.->|não voltou| FA
 ```
 
-**Quando entrega.** O Gatilho E fecha quando todas as tarefas foram integradas, nenhuma ficou bloqueada, a pilha completa passa na integração e a entrega automática está ligada em `projeto.md`. Com qualquer tarefa bloqueada, nada é entregue: o trabalho fica na branch de integração e o relatório diz por quê.
+**Quando entrega.** O Gatilho E fecha quando todas as tarefas foram integradas, nenhuma ficou bloqueada, a pilha completa passa na integração e a entrega automática está ligada em `projeto.md`. Com qualquer tarefa bloqueada, nada é entregue: o trabalho fica na branch de integração e o relatório diz por quê. Quando você responde às perguntas dela, a execução segue de onde parou.
 
 **Como entrega.** O orquestrador abre o pull request com o resumo do plano e os vereditos e faz o merge. Em repositório sem pull request, avança a principal direto. Se o merge for recusado por conflito ou por regra do repositório, ele não força. Em seguida roda `deploy/implantar.sh` na pasta de produção, que:
 
@@ -392,12 +394,14 @@ Tudo o que acontece fica em arquivo, para a execução poder ser retomada e para
       tela.md                    saída do verificador de tela
       seguranca.md               saída do revisor de segurança
       capturas/                  uma imagem por passo do roteiro
+      bloqueio.md                o que travou e as perguntas para você, se a tarefa bloquear
+      respostas.md               o que você respondeu
 .claude/worktrees/
   <pedido>-integracao/           cópia do código da integração
   <pedido>-<tarefa>/             cópia do código de cada tarefa
 ```
 
-Estados de uma tarefa: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`.
+Estados de uma tarefa: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`, `retirada`.
 
 A pasta em que você trabalha não é tocada pelo `/fluxo`. Com o Gatilho E fechado, o resultado vai para a branch principal e para produção; caso contrário, fica na branch `fluxo/<pedido>/integracao`.
 
@@ -446,7 +450,7 @@ flowchart LR
 
 No terminal o Mermaid aparece como texto. O relatório fica salvo em `relatorio.md`, na pasta da execução, para abrir em um visualizador de Markdown e ver o desenho.
 
-Dúvidas comuns chegam juntas no relatório, enquanto os agentes seguem com a melhor suposição. Interrupção no meio só em dois casos: ação irreversível ou todas as tarefas bloqueadas.
+Dúvidas comuns chegam juntas no relatório, enquanto os agentes seguem com a melhor suposição. Interrupção no meio só em dois casos: ação irreversível ou todas as tarefas bloqueadas. As perguntas de uma tarefa bloqueada chegam na hora, uma por vez, mas não interrompem nada: as outras tarefas seguem.
 
 ## Seu teste
 
@@ -482,7 +486,7 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 - Restaurar o banco de uma cópia, que apaga o que foi gravado depois dela.
 - Qualquer ação irreversível fora da entrega: exclusão de dados, envio a cliente.
 - Segredos versionados que o diagnóstico encontrar. Trocar credencial é com você.
-- Tarefas bloqueadas e suspeitos de código morto.
+- Responder às perguntas das tarefas bloqueadas, e decidir os suspeitos de código morto.
 - O teste de uso. O agente julga bem "funciona" e "está quebrado", e pior "está agradável".
 - Aprovar ou recusar as propostas de melhoria.
 

@@ -16,7 +16,7 @@ Você é o orquestrador. Você divide o trabalho, dispara subagentes, confere os
 - `AGENTS.md`: comandos e padrões do projeto. Você e todos os subagentes já o recebem.
 - `.cyberstack/projeto.md`: configuração do fluxo (pastas de teste, documentação compartilhada, áreas sensíveis, entrega).
 - `.cyberstack/execucoes/<slug>/`: pasta desta execução. Contém `plano.md`, `linha-de-base.md`, `decisoes.md`, `aprendizado.md`, `documentacao.md`, `entrega.md`, `relatorio.md` e uma pasta por tarefa.
-- `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente (`entrega.md`, `testes.md`, `revisao.md`, `tela.md`, `seguranca.md`, pasta `capturas`).
+- `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente (`entrega.md`, `testes.md`, `revisao.md`, `tela.md`, `seguranca.md`, pasta `capturas`). Se a tarefa bloquear, também `bloqueio.md` e `respostas.md`.
 - `.claude/worktrees/<slug>-integracao/`: cópia do código onde a integração acontece.
 - `.claude/worktrees/<slug>-<tarefa>/`: cópia do código de cada tarefa.
 - Branches: `fluxo/<slug>/integracao` e `fluxo/<slug>/<tarefa>`.
@@ -29,12 +29,12 @@ Formato de `estado.json`:
 {"tarefa": "T1", "estado": "implementando", "tentativas": 0, "motivo": ""}
 ```
 
-Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`. Atualize o arquivo a cada transição.
+Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`, `retirada`. Atualize o arquivo a cada transição.
 
 ## 1. Preparação
 
 1. Confira que o `AGENTS.md` tem o comando da pilha de testes e que `.cyberstack/projeto.md` tem as pastas de teste. Se faltar um dos dois, pare e diga ao usuário para rodar `/preparar` ou preencher os arquivos.
-2. Se já existir uma execução deste pedido em `.cyberstack/execucoes/`, leia os `estado.json` e continue de onde parou, em vez de recomeçar.
+2. Se já existir uma execução deste pedido em `.cyberstack/execucoes/`, leia os `estado.json` e continue de onde parou, em vez de recomeçar. Tarefa `bloqueada` que tem `bloqueio.md` e ainda espera resposta: volte a fazer as perguntas ao usuário.
 3. Compare o commit que está em produção, lido na pasta de produção de `projeto.md`, com a ponta da branch principal. Se houver remoto, busque antes e use a ponta do remoto. Se `projeto.md` ainda não tem pasta de produção, pule este passo. Se os dois commits forem iguais, siga. Se o commit em produção não estiver no histórico da principal, pare e avise o usuário. Nos demais casos a principal está à frente da produção: descubra o motivo no registro de implantações (`deploy/reverter.sh --listar`, na pasta de produção) antes de mexer em qualquer coisa:
    - A ponta da principal aparece no registro: ela já esteve em produção e saiu, por reversão ou por implantação que falhou. A principal contém código que saiu do ar. Sincronize antes de qualquer tarefa.
    - Nenhum commit à frente da produção aparece no registro: são commits que nunca foram implantados, feitos fora do fluxo. Não desfaça nada. Registre em `decisoes.md` quais são e siga: eles vão ao ar com a próxima entrega.
@@ -82,7 +82,7 @@ Gatilho C, para marcar a tarefa como aprovada: todos os disparados respondem `VE
 
 Qualquer gatilho que falhe soma 1 em `tentativas`. Acrescente uma linha em `aprendizado.md` com a tarefa, quem reprovou e o motivo resumido. Devolva a tarefa ao `implementador` com o motivo e nada mais: somente a seção de falhas ou de bloqueantes de quem reprovou. Depois refaça o caminho desde o Gatilho A.
 
-Com `tentativas` em 3, marque `bloqueada`, grave o motivo e siga com as outras tarefas. Não pare a execução por causa de uma tarefa. Tarefa que depende de uma bloqueada também é marcada `bloqueada`, com o motivo "depende de <tarefa>", sem ser disparada.
+Com `tentativas` em 3, marque `bloqueada`, grave o motivo e siga com as outras tarefas. Não pare a execução por causa de uma tarefa. O que fazer com ela está em "Tarefa bloqueada", abaixo. Tarefa que depende de uma bloqueada também é marcada `bloqueada`, com o motivo "depende de <tarefa>", sem ser disparada.
 
 `RESULTADO: BLOQUEADO` do implementador não é reprovação: marque a tarefa como `bloqueada` na hora, com o que ele disse que falta.
 
@@ -91,6 +91,20 @@ Quando quem errou foi o agente e não o código, a tarefa não volta ao implemen
 Um `VEREDITO: BLOQUEADO` do verificador de tela por falta de navegador não reprova a tarefa: registre em `decisoes.md` que a verificação de tela não foi feita e siga.
 
 Saída sem a linha de `RESULTADO` ou de `VEREDITO` quer dizer que o agente parou no teto de turnos antes de concluir. Isso não é reprovação: retome o mesmo agente para ele terminar. Se depois de duas retomadas a linha ainda não vier, marque a tarefa como `bloqueada`, com esse motivo.
+
+### Tarefa bloqueada
+
+Tarefa bloqueada volta ao usuário na hora, com as perguntas de que ela precisa para andar. As outras tarefas seguem.
+
+1. Dispare o `planejador` com o bloco da tarefa, a worktree dela e o motivo de cada reprovação, pedindo a análise do bloqueio. Grave a saída em `bloqueio.md`, na pasta da tarefa. Tarefa bloqueada só por depender de outra não passa por isso: ela espera a outra.
+2. Faça ao usuário a primeira pergunta de `bloqueio.md`, em texto, na conversa, dizendo qual é a tarefa e o que travou. Uma pergunta por vez: a resposta de uma decide qual é a próxima, ou dispensa as seguintes. Não use ferramenta que fique esperando a resposta: enquanto ela espera, os gatilhos das outras tarefas param. Com mais de uma tarefa bloqueada, termine as perguntas de uma antes de começar as da outra.
+3. Grave cada resposta em `respostas.md`, na pasta da tarefa. Quando as respostas bastarem, siga o caminho que elas apontam:
+   - Prosseguir: zere `tentativas`, volte o estado para `implementando` e dispare o `implementador`, ou o `testador` em tarefa `Tipo: testes`, com o bloco da tarefa, o que travou e as respostas. A tarefa refaz o caminho desde o Gatilho A.
+   - Outra solução: dispare o `planejador` para reescrever a tarefa no plano, ou trocá-la por outras, a partir das respostas. O que ele escrever percorre o caminho normal.
+   - Tirar do pedido: marque a tarefa como `retirada`. Ela deixa de contar para a entrega.
+4. Tarefa que estava bloqueada por depender desta volta a esperar quando esta é reaberta ou reescrita, e vai junto ao planejador quando esta é retirada.
+
+Se a execução chegar ao fim antes das respostas, as perguntas que faltam vão no relatório, a tarefa continua `bloqueada` e nada é entregue. Quando o usuário responder, siga daqui.
 
 ## 5. O que cada subagente recebe
 
@@ -114,7 +128,7 @@ Depois de cada integração, veja se alguma tarefa dependente foi liberada e dis
 
 ## 7. Documentação
 
-Gatilho: todas as tarefas em `integrada` ou `bloqueada`, com pelo menos uma integrada.
+Gatilho: todas as tarefas em `integrada`, `retirada` ou `bloqueada`, com pelo menos uma integrada. Se uma tarefa for reaberta depois, este passo roda de novo quando ela chegar ao fim.
 
 Dispare o `documentador` na worktree de integração, com o plano e o comando do diff contra a branch base. Se a execução veio de um plano do `/preparar`, passe também o caminho do diagnóstico. Grave a saída em `documentacao.md`.
 
@@ -132,7 +146,7 @@ Escreva a proposta e não aplique. Você e os subagentes nunca alteram `AGENTS.m
 
 ## 9. Entrega
 
-Gatilho E: todas as tarefas estão `integrada`, nenhuma está `bloqueada`, o Gatilho D passou, a pilha completa passa na worktree de integração e `projeto.md` diz `Entrega automática: sim`, com a pasta de produção e os comandos de implantação e de reversão preenchidos. Se `projeto.md` manda segurar em área sensível e alguma tarefa tocou uma, o gatilho não fecha.
+Gatilho E: todas as tarefas estão `integrada` ou `retirada`, nenhuma está `bloqueada`, o Gatilho D passou, a pilha completa passa na worktree de integração e `projeto.md` diz `Entrega automática: sim`, com a pasta de produção e os comandos de implantação e de reversão preenchidos. Se `projeto.md` manda segurar em área sensível e alguma tarefa tocou uma, o gatilho não fecha: a entrega espera a aprovação do usuário, pedida no relatório, e acontece quando ele aprovar.
 
 Com o gatilho aberto, não entregue. Grave o motivo em `entrega.md` e siga para o relatório: o trabalho fica na branch de integração, esperando o usuário.
 
@@ -153,11 +167,12 @@ Com o gatilho fechado, a entrega não espera ninguém:
 1. Dispare a `ponte` com o caminho da pasta da execução.
 2. Grave a saída da ponte em `relatorio.md`, na pasta da execução.
 3. Mostre ao usuário a saída da ponte, sem alterar, resumir ou acrescentar nada.
+4. Se ficou tarefa bloqueada esperando resposta, a execução não acabou. Quando o usuário responder, siga pela seção 4 e, no fim, faça a entrega e um relatório novo.
 
 ## Regras
 
-- Decisão ambígua: escolha a leitura mais razoável, registre em `decisoes.md` e continue. Não pergunte no meio da execução.
+- Decisão ambígua: escolha a leitura mais razoável, registre em `decisoes.md` e continue. Não pergunte no meio da execução; a exceção é a tarefa bloqueada, na seção 4.
 - Comando demorado, como a pilha de testes e a implantação, roda com tempo limite maior que os dois minutos padrão. Nunca interrompa uma implantação no meio.
-- Pare e pergunte somente se a produção ficar fora do ar, se todas as tarefas estiverem bloqueadas ou se a próxima ação for irreversível e não estiver prevista na seção Entrega.
+- Pare e pergunte somente se a produção ficar fora do ar, se todas as tarefas estiverem bloqueadas ou se a próxima ação for irreversível e não estiver prevista na seção Entrega. A pergunta de tarefa bloqueada não é parada: as outras tarefas seguem.
 - Merge na principal, envio e implantação acontecem só na seção Entrega e na sincronização da preparação, e só pelos comandos de `projeto.md`. Você nunca força um merge, nunca altera o banco de produção à mão e nunca dispara envio de mensagem ou cobrança.
-- Quando o usuário responder às dúvidas do relatório, as respostas viram novas tarefas e percorrem o mesmo caminho. Proposta de melhoria aprovada também vira tarefa.
+- Quando o usuário responder às dúvidas do relatório, as respostas viram novas tarefas e percorrem o mesmo caminho. Proposta de melhoria aprovada também vira tarefa. Resposta a pergunta de tarefa bloqueada não vira tarefa nova: reabre, reescreve ou retira a própria tarefa, pela seção 4.

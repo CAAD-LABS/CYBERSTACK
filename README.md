@@ -11,7 +11,7 @@ Feita para projetos em Python, com banco SQLite3 e front em HTML e JavaScript, r
 
 O desenho completo, com os diagramas do fluxo, dos gatilhos e da entrega, está em [docs/desenho.md](docs/desenho.md).
 
-Situação: desenho fechado e definições escritas. A stack ainda não rodou em um projeto real. Os dois scripts de implantação são exercitados por `testes/implantacao.sh`.
+Situação: desenho fechado e definições escritas. A stack ainda não rodou em um projeto real. Os dois scripts de implantação são exercitados por `testes/implantacao.sh`, com 74 conferências.
 
 ## O que tem aqui
 
@@ -44,12 +44,14 @@ Se você é um agente instalando a stack: use o `instalar.sh` em vez de copiar o
 
 ## Usar
 
-1. Abra uma sessão nova do Claude Code na raiz do projeto e rode `/preparar`.
+1. Abra uma sessão nova do Claude Code na raiz do projeto, em `opus` com esforço `high`, e rode `/preparar`.
 2. Revise os arquivos base e o plano de limpeza, faça commit e instale o serviço.
 3. Rode `/fluxo executar o plano em .cyberstack/preparacao/plano.md` para a limpeza.
 4. Daí em diante, `/fluxo <pedido>` a cada feature.
 
 A lista completa do primeiro uso está em [docs/desenho.md](docs/desenho.md#primeiro-uso-em-um-projeto).
+
+O modelo e o esforço da sessão são os do orquestrador: os que estão no cabeçalho dos dois comandos valem só no turno em que o comando é digitado, e a orquestração segue por muitos turnos, um a cada retorno de subagente.
 
 ## Conferir e testar
 

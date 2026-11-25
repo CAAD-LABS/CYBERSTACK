@@ -162,9 +162,9 @@ O `/preparar` não mexe em código. Ele para na proposta e espera você, porque 
 4. Estrutura: movimentos e junções de arquivos.
 5. Documentação: corrigida no fim pelo documentador, a partir do diagnóstico.
 
-Toda tarefa de limpeza tem três critérios fixos: a pilha de testes dá o mesmo resultado de antes, nenhum comportamento observável muda e nenhum arquivo fora da lista é alterado.
+Toda tarefa de limpeza tem três critérios fixos: a pilha de testes dá o mesmo resultado de antes, nenhum comportamento observável muda e nenhum arquivo fora da lista é alterado. Remoção, adequação e estrutura dependem das tarefas de teste da mesma área, para a rede de segurança existir antes da mudança.
 
-**Execução.** Depois de revisar, fazer commit dos arquivos base e instalar o serviço, você roda `/fluxo executar o plano em .cyberstack/preparacao/plano.md`. A limpeza percorre o mesmo caminho de uma feature, com os mesmos gatilhos.
+**Execução.** Depois de revisar, fazer commit dos arquivos base, criar a pasta de produção e instalar o serviço, você roda `/fluxo executar o plano em .cyberstack/preparacao/plano.md`. A limpeza percorre o mesmo caminho de uma feature, com os mesmos gatilhos.
 
 ## Visão geral de uma feature
 
@@ -253,7 +253,7 @@ O que o orquestrador confere em cada gatilho:
 | D | Entrega | O documentador só alterou as pastas de documentação compartilhada. |
 | E | PR, merge e implantação | Todas as tarefas integradas, nenhuma bloqueada, pilha completa passando na integração e entrega automática ligada. |
 
-O orquestrador não aceita relato: ele mesmo roda o comando de teste e olha a lista de arquivos de cada commit.
+O orquestrador não aceita relato: ele mesmo roda o comando de teste e olha a lista de arquivos de cada commit. "A pilha passa" quer dizer que não há falha além das que já existiam antes da execução, medidas por ele na branch de integração. Tela e segurança são disparadas pelo que o diff toca, não só pelo que o plano previu.
 
 Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não passa pelo implementador: começa direto no testador.
 
@@ -276,9 +276,11 @@ Todos podem executar código na sua cópia. Nenhum subagente faz nada com efeito
 
 Se o limite da assinatura apertar, o primeiro ajuste é o implementador para `sonnet` com esforço `high`, e depois o orquestrador para esforço `medium`.
 
+O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem só no turno em que o comando é digitado. Os subagentes rodam em segundo plano, e cada retorno abre um turno novo, que usa o modelo e o esforço da sessão. Para o orquestrador rodar como na tabela do começo ao fim, abra a sessão já em `opus` com esforço `high`. É também na sessão que se baixa o esforço dele.
+
 ### O que cada um faz
 
-- **Inspetor.** Examina o repositório inteiro e entrega o diagnóstico. Comando que ele não rodou não entra como confirmado.
+- **Inspetor.** Examina o repositório inteiro e entrega o diagnóstico. Comando que ele não rodou não entra como confirmado. Não roda nada que aponte para o banco ou para as integrações de produção.
 - **Planejador.** Lê o código, roda o sistema se precisar, escreve os critérios de aceite e divide em tarefas. Duas tarefas só são independentes se não tocam os mesmos arquivos.
 - **Implementador.** Roda a pilha antes de começar para ter a linha de base, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature.
 - **Testador.** Lê os critérios de aceite antes do diff e escreve pelo menos um teste por critério. Se acha defeito, reprova com o teste que falha; não conserta o código.
@@ -293,9 +295,9 @@ Se o limite da assinatura apertar, o primeiro ajuste é o implementador para `so
 1. Qualquer gatilho que falhe soma uma tentativa e é anotado no registro de aprendizado.
 2. A tarefa volta ao implementador com o motivo e nada mais.
 3. O caminho é refeito desde o Gatilho A.
-4. Na terceira tentativa a tarefa é marcada como bloqueada. As outras continuam.
+4. Na terceira tentativa a tarefa é marcada como bloqueada. As outras continuam, menos as que dependem dela, que ficam bloqueadas também.
 
-Se a pilha falhar depois de um merge na integração, o merge é desfeito e a tarefa é tratada como reprovada.
+Se a pilha falhar depois de um merge na integração, o merge é desfeito e a tarefa é tratada como reprovada. O mesmo vale para conflito de merge. Nos dois casos, a tarefa volta ao implementador já com o código das outras tarefas integradas.
 
 ## Entrega automática e reversão
 
@@ -330,29 +332,37 @@ flowchart TD
 **Como entrega.** O orquestrador abre o pull request com o resumo do plano e os vereditos e faz o merge. Em repositório sem pull request, avança a principal direto. Se o merge for recusado por conflito ou por regra do repositório, ele não força. Em seguida roda `deploy/implantar.sh` na pasta de produção, que:
 
 1. copia o banco SQLite, pela API de cópia do próprio SQLite, segura com o sistema no ar;
-2. coloca o código do commit, instala dependências e roda a migração;
+2. coloca o código do commit e, com a configuração desse commit, instala dependências e roda a migração;
 3. reinicia o serviço;
-4. verifica que o serviço está ativo e que o endereço de verificação responde;
+4. verifica, duas vezes seguidas, que o serviço está ativo e que o endereço de verificação responde;
 5. registra a implantação: data, commit, cópia do banco e resultado.
 
-**Se a verificação falha,** o script volta sozinho ao commit que estava no ar e reinicia. O orquestrador então desfaz o merge na principal com um commit de reversão, para ela não ficar com código que falhou.
+Na primeira implantação, o registro ganha também o commit que já estava no ar, para a primeira entrega ter para onde voltar.
+
+**Se a verificação falha,** o script volta sozinho ao commit que estava no ar e reinicia, sem rodar migração de novo. O orquestrador então devolve à principal o conteúdo que está no ar, com um commit novo, para ela não ficar com código que falhou.
+
+**Se o script para antes de trocar o código,** por falha de rede ou da cópia do banco, o orquestrador tenta mais uma vez. Se repetir, relata como não entregue e a principal fica à frente da produção até a próxima entrega.
 
 **Voltar uma versão quando você quiser.** Na pasta de produção:
 
 | Comando | Efeito |
 |---|---|
-| `deploy/reverter.sh` | Volta para a implantação bem-sucedida anterior. |
+| `deploy/reverter.sh` | Volta para a implantação bem-sucedida anterior. Rodar de novo volta mais uma. |
 | `deploy/reverter.sh <commit>` | Volta para um commit específico. |
 | `deploy/reverter.sh --listar` | Mostra as implantações registradas. |
 | `deploy/reverter.sh --restaurar-banco <cópia>` | Restaura o banco de uma cópia e reinicia. |
 
+A volta funciona mesmo sem acesso ao remoto, porque o commit já está na pasta de produção.
+
 Voltar o código não volta o banco. Restaurar a cópia apagaria tudo o que foi gravado depois dela, então isso só acontece quando você pede. O que torna isso seguro é a regra de migração do `AGENTS.md`: migração só acrescenta, de modo que a versão anterior do código funciona com o banco novo.
 
-**Depois de uma reversão,** a principal ainda contém o código que saiu do ar. No início do próximo `/fluxo`, o orquestrador compara o commit em produção com a ponta da principal, cria os commits que desfazem a diferença e confere que o conteúdo ficou idêntico ao que está no ar. Só então começa a feature nova.
+**Depois de uma reversão,** a principal ainda contém o código que saiu do ar. No início do próximo `/fluxo`, o orquestrador compara o commit em produção com a ponta da principal e consulta o registro de implantações. Se a ponta da principal já esteve em produção, ele cria um commit que devolve à principal o conteúdo exato do que está no ar e confere que ficou idêntico. Só então começa a feature nova.
+
+**Commit seu direto na principal,** que nunca foi implantado, não é reversão: nada é desfeito, e ele vai ao ar com a próxima entrega.
 
 **Queda de máquina.** O serviço roda como unidade systemd com `Restart=always`, habilitada na inicialização: volta se o processo cair e sobe sozinho quando a máquina liga. O banco em modo WAL resiste a desligamento abrupto. Se o sistema roda em máquina virtual, falta configurar no hospedeiro o início automático da própria máquina virtual.
 
-**O que foi testado.** Os dois scripts rodaram em simulação, com um serviço Python e banco SQLite: implantação boa com migração, implantação quebrada com volta automática, reversão manual com o banco preservado, restauração de banco e falha total. A unidade systemd e os comandos com sudo não foram testados em uma máquina real.
+**O que foi testado.** Os dois scripts rodam em simulação, com um serviço Python e banco SQLite: implantação boa com migração, implantação quebrada com volta automática, reversão manual com o banco preservado, restauração de banco e falha total. A simulação está em `testes/implantacao.sh`. A unidade systemd passa no `systemd-analyze verify`, mas a instalação dela e os comandos com sudo não foram testados em uma máquina real.
 
 **O risco que fica.** Sem ambiente separado, um defeito que passe por todos os gatilhos chega aos usuários antes de você ver. Para sistemas que cobram ou enviam mensagens a clientes, `projeto.md` tem a opção de segurar a entrega quando a execução toca área sensível. Ela vem desligada.
 
@@ -368,6 +378,7 @@ Tudo o que acontece fica em arquivo, para a execução poder ser retomada e para
     plano.md                     plano de limpeza
   execucoes/<pedido>/
     plano.md                     critérios de aceite e tarefas
+    linha-de-base.md             resultado da pilha antes de qualquer tarefa
     decisoes.md                  o que foi decidido sem perguntar
     aprendizado.md               reprovações e propostas de correção
     documentacao.md              saída do documentador
@@ -422,7 +433,7 @@ flowchart LR
     B["Bloqueada<br/>teste de exportação falha"]
     I["Integração"]
     D["Documentação"]
-    A["Ambiente de teste"]
+    A["Não entregue<br/>fica na branch de integração"]
     P --> T1
     P --> T2
     T1 --> T3
@@ -479,9 +490,10 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 
 - [ ] Stack instalada: `.claude/agents/` e `.claude/skills/` no projeto ou em `~/.claude/`.
 - [ ] Permissões do Claude Code liberando os comandos de teste, lint e execução.
+- [ ] Sessão aberta em `opus` com esforço `high`, o modelo e o esforço do orquestrador.
 - [ ] Ferramenta de navegador configurada, se for usar o verificador de tela.
 - [ ] `/preparar`, depois revisar os arquivos base e fazer commit.
-- [ ] Serviço instalado e habilitado com os comandos do topo de `deploy/<serviço>.service`.
 - [ ] Pasta de produção clonada do repositório, com `.venv` e o banco no caminho de `deploy/config.env`.
+- [ ] Serviço instalado e habilitado com os comandos do topo de `deploy/<serviço>.service`.
 - [ ] `/fluxo executar o plano em .cyberstack/preparacao/plano.md`, para a limpeza.
 - [ ] Primeira feature pequena, de uma tarefa só, para calibrar os tetos de turnos.

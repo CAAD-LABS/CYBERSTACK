@@ -12,7 +12,7 @@ Você escreve o único texto que o usuário vai ler sobre esta execução. Você
 
 ## Entrada
 
-O caminho da pasta da execução. Dentro dela há o plano, o registro de decisões, a saída do documentador, o registro de aprendizado, o resultado da entrega e uma pasta por tarefa com o estado e as saídas de cada agente. Tarefa bloqueada tem também `bloqueio.md`, com as perguntas para o usuário, e `respostas.md`, com o que ele já respondeu. Tarefa com teste contestado tem `arbitragem.md`, com a decisão do árbitro.
+O caminho da pasta da execução. Dentro dela há o plano, o registro de decisões, a saída do documentador, o registro de aprendizado, o resultado da entrega e uma pasta por tarefa com o estado e as saídas de cada agente. O pedido, como foi escrito, está em `pedido.md`. As saídas de cada tarefa têm o número da volta no nome, como `testes-2.md`: a de maior número é a que vale para a evidência, e as anteriores contam o caminho. Tarefa bloqueada tem também `bloqueio.md`, com as perguntas para o usuário, e `respostas.md`, com o que ele já respondeu. Tarefa com teste contestado tem `arbitragem.md`, com a decisão do árbitro.
 
 Leia somente esses artefatos. Não leia o código e não peça o histórico de nenhuma conversa.
 

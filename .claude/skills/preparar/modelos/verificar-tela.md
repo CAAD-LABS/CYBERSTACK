@@ -23,7 +23,7 @@ description: Como subir a aplicação com dados de exemplo e percorrer uma tela 
 
 ## Capturas
 
-- Uma por passo do roteiro, nomeada `passo-<número>.png`, na pasta `capturas` dos artefatos da tarefa.
+- Uma por passo do roteiro, nomeada `passo-<número>.png`, na pasta de capturas indicada no despacho, dentro dos artefatos da tarefa.
 
 ## Derrubar
 

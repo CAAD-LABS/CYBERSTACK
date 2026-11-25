@@ -383,7 +383,8 @@ Tudo o que acontece fica em arquivo, para a execução poder ser retomada e para
   preparacao/
     diagnostico.md               saída do inspetor
     plano.md                     plano de limpeza
-  execucoes/<pedido>/
+  execucoes/<data>-<pedido>/
+    pedido.md                    o pedido, como foi escrito
     plano.md                     critérios de aceite e tarefas
     linha-de-base.md             resultado da pilha antes de qualquer tarefa
     decisoes.md                  o que foi decidido sem perguntar
@@ -392,24 +393,26 @@ Tudo o que acontece fica em arquivo, para a execução poder ser retomada e para
     entrega.md                   resultado da entrega e comando de reversão
     relatorio.md                 relatório da ponte, com o desenho
     <tarefa>/
-      estado.json                estado e número de tentativas
-      entrega.md                 saída do implementador
-      testes.md                  saída do testador
-      revisao.md                 saída do revisor
-      tela.md                    saída do verificador de tela
-      seguranca.md               saída do revisor de segurança
-      capturas/                  uma imagem por passo do roteiro
-      arbitragem.md              decisão do árbitro, se um teste for contestado
-      bloqueio.md                o que travou e as perguntas para você, se a tarefa bloquear
-      respostas.md               o que você respondeu
+      estado.json                estado, tentativas e número da volta
+      entrega-<volta>.md         saída do implementador
+      testes-<volta>.md          saída do testador
+      revisao-<volta>.md         saída do revisor
+      tela-<volta>.md            saída do verificador de tela
+      seguranca-<volta>.md       saída do revisor de segurança
+      capturas-<volta>/          uma imagem por passo do roteiro
+      arbitragem-<volta>.md      decisão do árbitro, se um teste for contestado
+      bloqueio-<volta>.md        o que travou e as perguntas para você, se a tarefa bloquear
+      respostas-<volta>.md       o que você respondeu
 .claude/worktrees/
-  <pedido>-integracao/           cópia do código da integração
-  <pedido>-<tarefa>/             cópia do código de cada tarefa
+  <data>-<pedido>-integracao/    cópia do código da integração
+  <data>-<pedido>-<tarefa>/      cópia do código de cada tarefa
 ```
+
+A pasta da execução leva a data e o pedido em poucas palavras, como `2026-01-31-exportar-relatorio`, e guarda o pedido como foi escrito: é por ele que uma execução interrompida é reconhecida e retomada. Cada volta de uma tarefa grava as suas saídas com o número da volta. Nada é sobrescrito, e a retomada sabe qual saída vale.
 
 Estados de uma tarefa: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`, `retirada`.
 
-A pasta em que você trabalha não é tocada pelo `/fluxo`. Com o Gatilho E fechado, o resultado vai para a branch principal e para produção; caso contrário, fica na branch `fluxo/<pedido>/integracao`.
+A pasta em que você trabalha não é tocada pelo `/fluxo`. Com o Gatilho E fechado, o resultado vai para a branch principal e para produção; caso contrário, fica na branch `fluxo/<data>-<pedido>/integracao`.
 
 ## Relatório da ponte
 

@@ -15,8 +15,8 @@ Você é o orquestrador. Você divide o trabalho, dispara subagentes, confere os
 
 - `AGENTS.md`: comandos e padrões do projeto. Você e todos os subagentes já o recebem.
 - `.cyberstack/projeto.md`: configuração do fluxo (pastas de teste, documentação compartilhada, áreas sensíveis, entrega).
-- `.cyberstack/execucoes/<slug>/`: pasta desta execução. Contém `plano.md`, `linha-de-base.md`, `decisoes.md`, `aprendizado.md`, `documentacao.md`, `entrega.md`, `relatorio.md` e uma pasta por tarefa.
-- `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente (`entrega.md`, `testes.md`, `revisao.md`, `tela.md`, `seguranca.md`, pasta `capturas`). Se a tarefa bloquear, também `bloqueio.md` e `respostas.md`; se um teste for contestado, `arbitragem.md`.
+- `.cyberstack/execucoes/<slug>/`: pasta desta execução. O `<slug>` é a data de hoje e o pedido em poucas palavras, em minúsculas e com hífens, como `2026-01-31-exportar-relatorio`. Contém `pedido.md`, com o pedido como foi escrito, `plano.md`, `linha-de-base.md`, `decisoes.md`, `aprendizado.md`, `documentacao.md`, `entrega.md`, `relatorio.md` e uma pasta por tarefa.
+- `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente, uma por volta: `entrega-<volta>.md`, `testes-<volta>.md`, `revisao-<volta>.md`, `tela-<volta>.md`, `seguranca-<volta>.md` e a pasta `capturas-<volta>`. Se a tarefa bloquear, também `bloqueio-<volta>.md` e `respostas-<volta>.md`; se um teste for contestado, `arbitragem-<volta>.md`. Nada é sobrescrito. No resto deste texto esses nomes aparecem sem o número, para encurtar.
 - `.claude/worktrees/<slug>-integracao/`: cópia do código onde a integração acontece.
 - `.claude/worktrees/<slug>-<tarefa>/`: cópia do código de cada tarefa.
 - Branches: `fluxo/<slug>/integracao` e `fluxo/<slug>/<tarefa>`.
@@ -26,15 +26,21 @@ A pasta em que o usuário está trabalhando não é tocada: todo o trabalho acon
 Formato de `estado.json`:
 
 ```
-{"tarefa": "T1", "estado": "implementando", "tentativas": 0, "motivo": ""}
+{"tarefa": "T1", "estado": "implementando", "tentativas": 0, "volta": 1, "motivo": ""}
 ```
+
+`volta` começa em 1 e soma 1 cada vez que a tarefa recomeça o caminho, por reprovação, arbitragem ou reabertura. Nunca é zerada, nem quando `tentativas` é.
 
 Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`, `retirada`. Atualize o arquivo a cada transição.
 
 ## 1. Preparação
 
 1. Confira que o `AGENTS.md` tem o comando da pilha de testes e que `.cyberstack/projeto.md` tem as pastas de teste. Se faltar um dos dois, pare e diga ao usuário para rodar `/preparar` ou preencher os arquivos.
-2. Se já existir uma execução deste pedido em `.cyberstack/execucoes/`, leia os `estado.json` e continue de onde parou, em vez de recomeçar. Tarefa `bloqueada` que tem `bloqueio.md` e ainda espera resposta: volte a fazer as perguntas ao usuário.
+2. Procure em `.cyberstack/execucoes/` uma execução que não terminou e cujo `pedido.md` seja este pedido, ou que o usuário mandou continuar. Terminada é a que tem `relatorio.md` e nenhuma tarefa `bloqueada` esperando resposta. Se não houver, crie a pasta com o slug de hoje e grave o pedido em `pedido.md`. Se houver, leia os `estado.json` e continue de onde parou, em vez de recomeçar:
+   - A saída que vale para cada tarefa é a da volta que está no `estado.json`. Saída de volta anterior é histórico.
+   - Tarefa que estava no meio de um agente, sem a saída da volta atual: dispare de novo o mesmo agente, na mesma worktree, dizendo que é retomada e que pode haver trabalho pela metade.
+   - Tarefa `bloqueada` que tem `bloqueio.md` e ainda espera resposta: volte a fazer as perguntas ao usuário.
+   - Antes de refazer um passo da entrega, veja se ele já aconteceu: PR já mesclado, commit já em produção.
 3. Compare o commit que está em produção, lido na pasta de produção de `projeto.md`, com a ponta da branch principal. Se houver remoto, busque antes e use a ponta do remoto. Se `projeto.md` ainda não tem pasta de produção, pule este passo. Se os dois commits forem iguais, siga. Se o commit em produção não estiver no histórico da principal, pare e avise o usuário. Nos demais casos a principal está à frente da produção: descubra o motivo no registro de implantações (`deploy/reverter.sh --listar`, na pasta de produção) antes de mexer em qualquer coisa:
    - A ponta da principal aparece no registro: ela já esteve em produção e saiu, por reversão ou por implantação que falhou. A principal contém código que saiu do ar. Sincronize antes de qualquer tarefa.
    - Nenhum commit à frente da produção aparece no registro: são commits que nunca foram implantados, feitos fora do fluxo. Não desfaça nada. Registre em `decisoes.md` quais são e siga: eles vão ao ar com a próxima entrega.
@@ -125,7 +131,7 @@ Se a execução chegar ao fim antes das respostas, as perguntas que faltam vão 
 
 ## 5. O que cada subagente recebe
 
-O bloco inteiro da tarefa, copiado do plano, com o identificador e o tipo; caminho absoluto da worktree, da pasta de artefatos e de `projeto.md`; os critérios de aceite da tarefa; para o testador, a entrega do implementador; para testador, revisor e segurança, o comando que mostra o diff contra a branch de integração; e, para revisor, verificador de tela e segurança, a pasta temporária de cada um.
+O bloco inteiro da tarefa, copiado do plano, com o identificador e o tipo; o número da volta; caminho absoluto da worktree, da pasta de artefatos e de `projeto.md`; para o verificador de tela, a pasta de capturas da volta; os critérios de aceite da tarefa; para o testador, a entrega do implementador; para testador, revisor e segurança, o comando que mostra o diff contra a branch de integração; e, para revisor, verificador de tela e segurança, a pasta temporária de cada um.
 
 Um subagente começa na pasta do usuário, não na worktree, e o diretório dele não persiste de um comando para o outro. Diga em todo despacho que cada comando começa por `cd <worktree> &&`.
 

@@ -535,7 +535,7 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 Requisitos: Claude Code 2.1.271 ou mais novo, git, python3 e curl. A entrega automática usa systemd e, quando leva o trabalho à principal por pull request, o `gh`. O verificador de tela precisa de uma ferramenta de navegador na sessão.
 
 ```bash
-git clone git@github.com:CAAD-LABS/CYBERSTACK.git
+git clone https://github.com/CAAD-LABS/CYBERSTACK.git
 cd CYBERSTACK
 ./instalar.sh /caminho/do/projeto   # só nesse projeto
 ./instalar.sh --global              # em ~/.claude, para todos os projetos
@@ -555,6 +555,7 @@ Se você é um agente instalando a stack: use o `instalar.sh` em vez de copiar o
 | [`instalar.sh`](instalar.sh) | Instala a stack em um projeto ou na pasta pessoal e confere os arquivos. |
 | [`SHA256SUMS`](SHA256SUMS) | O SHA-256 de cada arquivo da stack. |
 | [`testes/implantacao.sh`](testes/implantacao.sh) | Teste dos scripts de implantação e de reversão em um projeto de brinquedo. |
+| [`LICENSE`](LICENSE) | A licença MIT. |
 
 Os caminhos dentro de `.claude/` são os mesmos em que os arquivos ficam depois de instalados.
 
@@ -575,3 +576,7 @@ Os arquivos de `.claude/` deste repositório são a fonte. Depois de mudar um de
 3. atualize este README, inclusive os fluxogramas, se o comportamento mudou.
 
 Um projeto que já tem a stack instalada só recebe a mudança quando o `instalar.sh` roda de novo nele.
+
+## Licença
+
+[MIT](LICENSE). Pode usar, copiar, alterar e distribuir, mantendo o aviso de copyright.

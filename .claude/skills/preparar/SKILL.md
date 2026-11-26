@@ -1,6 +1,6 @@
 ---
 name: preparar
-description: Prepara um projeto para a CyberStack. Diagnostica o repositório, cria os arquivos base e monta o plano de limpeza para o usuário aprovar.
+description: Prepara um projeto para a CyberStack. Diagnostica o repositório, cria os arquivos base, monta o plano de limpeza, leva os arquivos base à principal e cria a pasta de produção.
 argument-hint: [observações]
 disable-model-invocation: true
 model: opus
@@ -11,7 +11,7 @@ Observações do usuário, se houver: $ARGUMENTS
 
 Você prepara este repositório para trabalhar com a CyberStack. Esta etapa roda uma vez por projeto, antes do primeiro `/fluxo`.
 
-Você diagnostica, cria os arquivos base e propõe a limpeza. Você não remove, não move e não reescreve código: isso acontece depois, pelo `/fluxo`, com o plano que o usuário aprovar. Também não faz commit.
+Você diagnostica, cria os arquivos base, propõe a limpeza, leva os arquivos base à principal e cria a pasta de produção. Você não remove, não move e não reescreve código: isso acontece depois, pelo `/fluxo`, com o plano.
 
 Os modelos dos arquivos base estão em `${CLAUDE_SKILL_DIR}/modelos/`.
 
@@ -35,9 +35,9 @@ Regras:
 
 - Escreva somente o que o diagnóstico confirmou. Comando que o inspetor não rodou com sucesso fica em branco.
 - As seções "Stack" e "Banco de dados" do modelo de `AGENTS.md` são o padrão da CyberStack e entram como estão. Onde o projeto não segue o padrão, não mude o texto: a diferença vira tarefa de adequação no plano.
-- Você não instala a unidade do serviço nem mexe em permissões do sistema. Isso exige sudo e fica com o usuário.
+- Você não mexe em permissões do sistema. A unidade do serviço só é instalada nas condições da seção 6.
 - Uma skill só é criada se todos os campos do modelo puderem ser preenchidos. Se faltar algum, não crie e diga qual faltou.
-- Este é o único momento em que um agente escreve os arquivos de orientação, porque o usuário pediu ao chamar este comando. Nada vai para commit sem ele.
+- Este é o único momento em que um agente escreve os arquivos de orientação, porque o usuário pediu ao chamar este comando. Eles vão à principal depois das perguntas da seção 4, sem esperar outra aprovação.
 
 ## 3. Plano de limpeza
 
@@ -62,7 +62,33 @@ Tarefas que tocam os mesmos arquivos dependem uma da outra. Fora a `Tipo: banco`
 
 Fica fora do plano: os "Suspeitos", que viram dúvida para o usuário, e os demais "Riscos", que são dele para resolver.
 
-## 4. Proposta
+## 4. Perguntas
+
+Antes de entregar, faça ao usuário, uma por vez, em texto, só as perguntas que são dele:
+
+- os "Suspeitos" de código morto, cada um com o que falta confirmar;
+- cada campo em branco dos arquivos base que só ele sabe, como a pasta de produção e o endereço do sistema.
+
+Cada pergunta traz as opções e a recomendada, tirada do diagnóstico. Comando que o inspetor não conseguiu rodar não vira pergunta: fica em branco. Com cada resposta, atualize o arquivo ou o plano na hora. Pergunta que ele pular fica como está e vai para o relatório.
+
+## 5. Entrega dos arquivos base
+
+Leve os arquivos base à principal, pelo caminho de "Como levar à principal" em `projeto.md`:
+
+1. Confira que a pasta está na principal e, se houver remoto, que a principal local é igual à remota depois de buscar. Se não estiver, não entregue: diga o que encontrou.
+2. Crie a branch `cyberstack-preparacao` e faça commit somente dos arquivos que você criou ou completou nas seções 2 a 4, do `.gitignore` e de `.cyberstack/preparacao/`. Adicione cada um pelo caminho, nunca a pasta inteira: alteração do usuário em outro arquivo fica fora do commit.
+3. Com pull request: envie a branch, abra o PR com o resumo do diagnóstico e do plano e faça o merge. Se o merge for recusado por conflito ou por regra do repositório, não force e diga o motivo. Sem remoto, ou com "Como levar à principal" dizendo direto, faça o commit na própria principal.
+4. Volte a pasta para a principal atualizada e apague a branch local.
+
+## 6. Pasta de produção e serviço
+
+Se `projeto.md` tem a pasta de produção e ela ainda não existe, crie: um clone do repositório na principal, com `.venv` e as dependências instaladas pelo comando `INSTALAR` de `deploy/config.env`. Se ela já existe e não é um clone deste repositório, não mexa: diga o que encontrou.
+
+Na pasta de produção você não roda a migração, o comando de contas de teste nem a aplicação, e não cria, copia nem move banco. Isso é da primeira implantação do `/fluxo`. Se o sistema já roda de outra pasta, com banco em uso, a troca para a pasta nova fica com o usuário, e o relatório diz os passos.
+
+Instale a unidade do serviço, com os comandos do topo de `deploy/<serviço>.service`, somente se valem as três: `sudo -n true` funciona, não existe unidade com esse nome e nada escuta na porta do sistema. Faltou uma, o serviço fica com o usuário, e o relatório diz qual faltou.
+
+## 7. Relatório
 
 Mostre ao usuário exatamente isto e pare:
 
@@ -88,19 +114,18 @@ Mostre ao usuário exatamente isto e pare:
 - Suspeitos de código morto: <itens e o que falta confirmar>
 - Riscos: <arquivo e tipo>
 
-## 5. Dúvidas
-1. <pergunta>
-   A) <opção>
-   B) <opção>
-   Recomendada: <A ou B>.
+## 5. Respostas
+- <pergunta>: <resposta e o que mudou>
+- Sem resposta: <perguntas puladas>
 
-## 6. Para continuar
-1. Revise `AGENTS.md`, `.cyberstack/projeto.md` e `deploy/config.env` e complete o que ficou em branco.
-2. Ajuste `.cyberstack/preparacao/plano.md` se quiser tirar ou incluir algo.
-3. Faça commit dos arquivos base e envie para o remoto, se houver.
-4. Crie a pasta de produção no caminho que você escreveu em `projeto.md`: um clone do repositório, com `.venv` e o banco no caminho de `deploy/config.env`.
-5. Instale o serviço, uma vez, com os comandos que estão no topo de `deploy/<serviço>.service`. É isso que faz o sistema subir sozinho quando a máquina liga e voltar se o processo cair.
-6. Rode: /fluxo executar o plano em .cyberstack/preparacao/plano.md
+## 6. Entrega
+- Arquivos base: PR #<n> mesclado em <commit curto> | commit direto na principal <commit curto> | não entregue: <motivo>
+- Pasta de produção: criada em <caminho> | já existia | não criada: <motivo>
+- Serviço: instalado e ativo | com você: <o que faltou>
+
+## 7. Para continuar
+1. <o que ficou com você, se ficou: comandos do serviço, troca da pasta, campos em branco>
+2. Rode: /fluxo executar o plano em .cyberstack/preparacao/plano.md
 ```
 
 Seção sem conteúdo recebe "Nada".

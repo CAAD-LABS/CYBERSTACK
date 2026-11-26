@@ -94,7 +94,7 @@ flowchart TD
     PONTE["Ponte<br/>relatório com o desenho da execução"]
 
     U -->|"/preparar"| INS
-    PROP -->|"você revisa, faz commit, prepara a produção e roda /fluxo com o plano"| SYNC
+    PROP -->|"você responde, ele entrega os arquivos base e cria a produção; você roda /fluxo com o plano"| SYNC
     U -->|"/fluxo com o pedido"| SYNC
     GD --> GE
     GE -.->|"gatilho aberto: fica na branch de integração"| PONTE
@@ -131,8 +131,8 @@ flowchart TD
     INS["Inspetor<br/>diagnóstico com evidência"]
     BASE["Arquivos base<br/>AGENTS.md, CLAUDE.md, projeto.md, deploy, skills"]
     PLANO["Plano de limpeza<br/>banco, testes, adequação, remoção, estrutura"]
-    PROP["Proposta<br/>situação, plano e dúvidas"]
-    AP{{"Você revisa, faz commit<br/>e prepara a produção"}}
+    PROP["Perguntas<br/>só as que são suas, uma por vez"]
+    AP["Entrega sozinho<br/>PR e merge dos arquivos base, pasta de produção"]
     FL["/fluxo executa o plano<br/>mesmo caminho de uma feature"]
     DOC["Documentador<br/>corrige a documentação antiga"]
     REL["Relatório da ponte"]
@@ -147,13 +147,13 @@ flowchart TD
     DOC --> REL
 ```
 
-O `/preparar` não mexe em código. Ele para na proposta e espera você, porque decidir o que é código morto é o tipo de escolha que pode ir para os dois lados.
+O `/preparar` não mexe em código. Ele pergunta só o que é seu, como os suspeitos de código morto e a pasta de produção, e o resto faz sozinho: leva os arquivos base à principal por PR e merge, cria a pasta de produção e, se houver sudo sem senha, instala o serviço.
 
 **Diagnóstico.** O inspetor roda os comandos do projeto e anota o resultado real, mapeia as pastas, levanta que áreas têm teste, classifica cada documento como correto, desatualizado ou órfão, e procura código morto, problemas de estrutura, o que falta e segredos versionados.
 
 **Código morto exige três verificações.** Nenhuma referência no repositório, não é ponto de entrada e não é carregado de forma dinâmica. Faltou uma, o item é "suspeito": não entra no plano e vira dúvida para você.
 
-**Arquivos base.** `AGENTS.md`, `CLAUDE.md`, `.cyberstack/projeto.md`, as skills locais de teste e de tela, a pasta `deploy/` com os scripts de implantação e a unidade do serviço, e as linhas do `.gitignore`. Só entra o que o diagnóstico confirmou; o resto fica em branco. É o único momento em que um agente escreve os arquivos de orientação, e nada vai para commit sem você.
+**Arquivos base.** `AGENTS.md`, `CLAUDE.md`, `.cyberstack/projeto.md`, as skills locais de teste e de tela, a pasta `deploy/` com os scripts de implantação e a unidade do serviço, e as linhas do `.gitignore`. Só entra o que o diagnóstico confirmou; o resto fica em branco. É o único momento em que um agente escreve os arquivos de orientação. Depois das suas respostas, eles vão à principal sem esperar outra aprovação.
 
 **Plano de limpeza,** nesta ordem:
 
@@ -166,7 +166,9 @@ O `/preparar` não mexe em código. Ele para na proposta e espera você, porque 
 
 Toda tarefa de limpeza tem três critérios fixos: a pilha de testes dá o mesmo resultado de antes, nenhum comportamento observável muda e nenhum arquivo fora da lista é alterado. Remoção, adequação e estrutura dependem das tarefas de teste da mesma área, para a rede de segurança existir antes da mudança.
 
-**Execução.** Depois de revisar, fazer commit dos arquivos base, criar a pasta de produção e instalar o serviço, você roda `/fluxo executar o plano em .cyberstack/preparacao/plano.md`. A limpeza percorre o mesmo caminho de uma feature, com os mesmos gatilhos.
+**Pasta de produção.** É um clone separado do repositório, de onde o serviço roda com o banco real. O `/preparar` cria o clone e instala as dependências, sem rodar migração nem a aplicação e sem tocar em banco: isso é da primeira implantação. Se o sistema já roda de outra pasta, a troca fica com você, e o relatório traz os passos.
+
+**Execução.** Com os arquivos base na principal e a produção pronta, você roda `/fluxo executar o plano em .cyberstack/preparacao/plano.md`. A limpeza percorre o mesmo caminho de uma feature, com os mesmos gatilhos.
 
 ## Visão geral de uma feature
 
@@ -501,8 +503,9 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 
 ## O que continua com você
 
-- Aprovar a proposta de preparação e fazer commit dos arquivos base.
-- Instalar o serviço na máquina, uma vez, com sudo.
+- Responder às perguntas da preparação.
+- Instalar o serviço na máquina, uma vez, com sudo, quando não há sudo sem senha.
+- Trocar para a pasta de produção um sistema que já roda de outra pasta.
 - Decidir voltar uma versão. O relatório traz o comando.
 - Restaurar o banco de uma cópia, que apaga o que foi gravado depois dela.
 - Qualquer ação irreversível fora da entrega: exclusão de dados, envio a cliente.
@@ -517,9 +520,8 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 - [ ] Permissões do Claude Code liberando os comandos de teste, lint e execução.
 - [ ] Sessão aberta em `opus` com esforço `high`, o modelo e o esforço do orquestrador.
 - [ ] Ferramenta de navegador configurada, se for usar o verificador de tela.
-- [ ] `/preparar`, depois revisar os arquivos base e fazer commit.
-- [ ] Pasta de produção clonada do repositório, com `.venv` e o banco no caminho de `deploy/config.env`.
-- [ ] Serviço instalado e habilitado com os comandos do topo de `deploy/<serviço>.service`.
+- [ ] `/preparar`, respondendo às perguntas. Ele entrega os arquivos base e cria a pasta de produção.
+- [ ] Serviço instalado e habilitado com os comandos do topo de `deploy/<serviço>.service`, se o `/preparar` não pôde.
 - [ ] `/fluxo executar o plano em .cyberstack/preparacao/plano.md`, para a limpeza.
 - [ ] Primeira feature pequena, de uma tarefa só, para calibrar os tetos de turnos.
 

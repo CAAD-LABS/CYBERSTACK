@@ -26,11 +26,13 @@ flowchart TD
     subgraph PREP["1. Preparação, uma vez por projeto, com /preparar"]
         INS["Inspetor<br/>diagnóstico com evidência"]
         BASE["Arquivos base<br/>AGENTS.md, projeto.md, deploy, skills"]
-        PLIMP["Plano de limpeza<br/>banco, testes, adequação, remoção, estrutura"]
-        PROP["Proposta<br/>situação, plano e dúvidas"]
+        PLIMP["Plano de limpeza<br/>banco, testes, adequação, remoção, slop, estrutura"]
+        PROP["Perguntas<br/>só as que são suas, uma por vez"]
+        ENTP["Entrega sozinho<br/>PR e merge dos arquivos base, pasta de produção"]
         INS --> BASE
         BASE --> PLIMP
         PLIMP --> PROP
+        PROP --> ENTP
     end
 
     subgraph FEAT["2. Cada pedido, com /fluxo"]
@@ -43,7 +45,7 @@ flowchart TD
             GA{{"Gatilho A: pilha existente passou"}}
             TES["Testador<br/>cria e roda testes novos"]
             GB{{"Gatilho B: testes novos passaram"}}
-            REV["Revisor<br/>diff e documentação"]
+            REV["Revisor<br/>diff, slop e documentação"]
             TEL["Verificador de tela<br/>se toca interface"]
             SEG["Segurança<br/>se toca área sensível"]
             GC{{"Gatilho C: todos aprovaram"}}
@@ -94,7 +96,7 @@ flowchart TD
     PONTE["Ponte<br/>relatório com o desenho da execução"]
 
     U -->|"/preparar"| INS
-    PROP -->|"você responde, ele entrega os arquivos base e cria a produção; você roda /fluxo com o plano"| SYNC
+    ENTP -->|"você roda /fluxo com o plano"| SYNC
     U -->|"/fluxo com o pedido"| SYNC
     GD --> GE
     GE -.->|"gatilho aberto: fica na branch de integração"| PONTE
@@ -223,7 +225,7 @@ flowchart TD
         GA{{"Gatilho A: pilha existente passou"}}
         TES["Testador<br/>cria e roda testes novos"]
         GB{{"Gatilho B: testes novos passaram"}}
-        REV["Revisor<br/>diff e documentação"]
+        REV["Revisor<br/>diff, slop e documentação"]
         TEL["Verificador de tela<br/>se toca interface"]
         SEG["Segurança<br/>se toca área sensível"]
         GC{{"Gatilho C: todos aprovaram"}}

@@ -130,7 +130,7 @@ flowchart TD
     U["Você<br/>chama /preparar"]
     INS["Inspetor<br/>diagnóstico com evidência"]
     BASE["Arquivos base<br/>AGENTS.md, CLAUDE.md, projeto.md, deploy, skills"]
-    PLANO["Plano de limpeza<br/>banco, testes, adequação, remoção, estrutura"]
+    PLANO["Plano de limpeza<br/>banco, testes, adequação, remoção, slop, estrutura"]
     PROP["Perguntas<br/>só as que são suas, uma por vez"]
     AP["Entrega sozinho<br/>PR e merge dos arquivos base, pasta de produção"]
     FL["/fluxo executa o plano<br/>mesmo caminho de uma feature"]
@@ -149,9 +149,11 @@ flowchart TD
 
 O `/preparar` não mexe em código. Ele pergunta só o que é seu, como os suspeitos de código morto e a pasta de produção, e o resto faz sozinho: leva os arquivos base à principal por PR e merge, cria a pasta de produção e, se houver sudo sem senha, instala o serviço.
 
-**Diagnóstico.** O inspetor roda os comandos do projeto e anota o resultado real, mapeia as pastas, levanta que áreas têm teste, classifica cada documento como correto, desatualizado ou órfão, e procura código morto, problemas de estrutura, o que falta e segredos versionados.
+**Diagnóstico.** O inspetor roda os comandos do projeto e anota o resultado real, mapeia as pastas, levanta que áreas têm teste, classifica cada documento como correto, desatualizado ou órfão, e procura código morto, slop, problemas de estrutura, o que falta e segredos versionados.
 
 **Código morto exige três verificações.** Nenhuma referência no repositório, não é ponto de entrada e não é carregado de forma dinâmica. Faltou uma, o item é "suspeito": não entra no plano e vira dúvida para você.
+
+**Slop tem lista fechada.** Está na seção "Slop" do `AGENTS.md`: comentário que repete o código, duplicação, abstração de um uso, defesa contra o que não acontece, erro engolido, depuração esquecida e arquivo de trabalho de agente versionado. O que não está na lista não é slop, e estilo não entra, para a limpeza não virar reescrita por gosto. Erro engolido não é limpo direto, porque tirar o `except` muda o que o sistema faz quando dá erro: cada um vira pergunta para você. Depois da limpeza, o implementador não escreve nada da lista e o revisor reprova o slop que o diff acrescenta, para ele não voltar.
 
 **Arquivos base.** `AGENTS.md`, `CLAUDE.md`, `.cyberstack/projeto.md`, as skills locais de teste e de tela, a pasta `deploy/` com os scripts de implantação e a unidade do serviço, e as linhas do `.gitignore`. Só entra o que o diagnóstico confirmou; o resto fica em branco. É o único momento em que um agente escreve os arquivos de orientação. Depois das suas respostas, eles vão à principal sem esperar outra aprovação.
 
@@ -161,10 +163,11 @@ O `/preparar` não mexe em código. Ele pergunta só o que é seu, como os suspe
 2. Rede de segurança: testes que registram o comportamento atual das áreas sem teste que serão tocadas.
 3. Adequação à entrega: o que mais estiver fora do padrão, como banco fora do modo WAL ou falta do endereço de verificação.
 4. Remoção de código morto, em grupos coesos, cada tarefa com a lista exata do que sai.
-5. Estrutura: movimentos e junções de arquivos.
-6. Documentação: corrigida no fim pelo documentador, a partir do diagnóstico.
+5. Slop: uma tarefa por tipo em cada área, com arquivo e linha, menos o erro engolido.
+6. Estrutura: movimentos e junções de arquivos.
+7. Documentação: corrigida no fim pelo documentador, a partir do diagnóstico.
 
-Toda tarefa de limpeza tem três critérios fixos: a pilha de testes dá o mesmo resultado de antes, nenhum comportamento observável muda e nenhum arquivo fora da lista é alterado. Remoção, adequação e estrutura dependem das tarefas de teste da mesma área, para a rede de segurança existir antes da mudança.
+Toda tarefa de limpeza tem três critérios fixos: a pilha de testes dá o mesmo resultado de antes, nenhum comportamento observável muda e nenhum arquivo fora da lista é alterado. Remoção, adequação, slop e estrutura dependem das tarefas de teste da mesma área, para a rede de segurança existir antes da mudança.
 
 **Pasta de produção.** É um clone separado do repositório, de onde o serviço roda com o banco real. O `/preparar` cria o clone e instala as dependências, sem rodar migração nem a aplicação e sem tocar em banco: isso é da primeira implantação. Se o sistema já roda de outra pasta, a troca fica com você, e o relatório traz os passos.
 
@@ -294,7 +297,7 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 - **Planejador.** Lê o código, roda o sistema se precisar, escreve os critérios de aceite e divide em tarefas. Duas tarefas só são independentes se não tocam os mesmos arquivos. Quando uma tarefa bloqueia, analisa o bloqueio e escreve as perguntas para você.
 - **Implementador.** Roda a pilha antes de começar para ter a linha de base, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature. Pode contestar um teste do testador que considere errado.
 - **Testador.** Lê os critérios de aceite antes do diff e escreve pelo menos um teste por critério. Se acha defeito, reprova com o teste que falha; não conserta o código.
-- **Revisor.** Procura critério não atendido, defeito, teste que só confirma a implementação, código desnecessário, documentação de módulo desatualizada e alteração indevida nos arquivos de orientação. Todo bloqueante tem arquivo, linha e cenário. Também arbitra teste contestado.
+- **Revisor.** Procura critério não atendido, defeito, teste que só confirma a implementação, código desnecessário, slop da lista que o diff acrescenta, documentação de módulo desatualizada e alteração indevida nos arquivos de orientação. Todo bloqueante tem arquivo, linha e cenário. Também arbitra teste contestado.
 - **Verificador de tela.** Sobe a aplicação da tarefa em uma porta temporária e a usa pelo navegador, como uma pessoa, com as contas de teste. Tira uma captura por passo e tenta também os caminhos errados. Não consulta banco, API nem código.
 - **Segurança.** Segue o dado da entrada até o uso. Só bloqueia com caminho de exploração.
 - **Documentador.** Lê o diff integrado e corrige a documentação compartilhada. Na limpeza, corrige também o que o diagnóstico apontou. Se um arquivo de orientação ficou desatualizado, propõe a mudança em vez de fazer.
@@ -510,7 +513,7 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 - Restaurar o banco de uma cópia, que apaga o que foi gravado depois dela.
 - Qualquer ação irreversível fora da entrega: exclusão de dados, envio a cliente.
 - Segredos versionados que o diagnóstico encontrar. Trocar credencial é com você.
-- Responder às perguntas das tarefas bloqueadas, e decidir os suspeitos de código morto.
+- Responder às perguntas das tarefas bloqueadas, e decidir os suspeitos de código morto e cada erro engolido.
 - O teste de uso. O agente julga bem "funciona" e "está quebrado", e pior "está agradável".
 - Aprovar ou recusar as propostas de melhoria.
 

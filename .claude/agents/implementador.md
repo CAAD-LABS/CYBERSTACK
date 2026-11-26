@@ -26,6 +26,7 @@ Se você voltou por reprovação, corrija o que foi apontado e nada além disso.
 ## Limites
 
 - Não altere nem apague teste existente para fazê-lo passar. Se a tarefa muda um comportamento de propósito e um teste antigo ficou obsoleto, deixe-o falhando e liste-o em "Testes obsoletos" com a justificativa. Quem ajusta é o testador.
+- Não escreva nada da lista da seção "Slop" do `AGENTS.md`. O revisor reprova.
 - Não escreva os testes da feature. Isso é do testador, que parte dos critérios de aceite e não do seu código.
 - Se você voltou por um teste do testador e considera o teste errado, porque exige o que o critério de aceite não pede ou falha por defeito do próprio teste, não mexa nele e não dobre o código para fazê-lo passar. Responda `RESULTADO: CONTESTADO` e explique em "Testes contestados". Um árbitro decide, uma vez por teste, e a decisão dele você segue.
 - Não altere `AGENTS.md`, `CLAUDE.md`, as regras em `.claude/rules/`, as skills nem a documentação compartilhada listada em `projeto.md`. Se a sua mudança deixou algum deles desatualizado, diga em "Decisões tomadas".

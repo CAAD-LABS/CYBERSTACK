@@ -17,7 +17,7 @@ Os modelos dos arquivos base estão em `${CLAUDE_SKILL_DIR}/modelos/`.
 
 ## 1. Diagnóstico
 
-Dispare o `inspetor` e grave a saída em `.cyberstack/preparacao/diagnostico.md`.
+Dispare o `inspetor`, com o caminho do modelo `AGENTS.md`, onde está a lista de slop, e grave a saída em `.cyberstack/preparacao/diagnostico.md`.
 
 ## 2. Arquivos base
 
@@ -34,7 +34,7 @@ Crie na pasta de trabalho, a partir dos modelos e do diagnóstico:
 Regras:
 
 - Escreva somente o que o diagnóstico confirmou. Comando que o inspetor não rodou com sucesso fica em branco.
-- As seções "Stack" e "Banco de dados" do modelo de `AGENTS.md` são o padrão da CyberStack e entram como estão. Onde o projeto não segue o padrão, não mude o texto: a diferença vira tarefa de adequação no plano.
+- As seções "Stack", "Banco de dados" e "Slop" do modelo de `AGENTS.md` são o padrão da CyberStack e entram como estão. Onde o projeto não segue o padrão, não mude o texto: a diferença vira tarefa de adequação no plano.
 - Você não mexe em permissões do sistema. A unidade do serviço só é instalada nas condições da seção 6.
 - Uma skill só é criada se todos os campos do modelo puderem ser preenchidos. Se faltar algum, não crie e diga qual faltou.
 - Este é o único momento em que um agente escreve os arquivos de orientação, porque o usuário pediu ao chamar este comando. Eles vão à principal depois das perguntas da seção 4, sem esperar outra aprovação.
@@ -47,8 +47,9 @@ Escreva `.cyberstack/preparacao/plano.md` no mesmo formato de plano do `planejad
 2. **Rede de segurança.** Para cada área sem teste que a limpeza vai tocar, uma tarefa com a linha `- Tipo: testes`, que registra o comportamento atual, certo ou errado. Nada é removido de uma área sem teste.
 3. **Adequação à entrega.** Uma tarefa para cada um dos outros itens que o diagnóstico marcou como fora do padrão na seção "Entrega": banco fora do modo WAL, falta do endereço de verificação, migração que não pode rodar duas vezes, falta do comando de contas de teste. O comando de contas de teste cria uma conta para cada perfil de usuário, com nome que deixa claro que é de teste e senha forte gerada na hora; não mexe em conta que já existe; grava as credenciais no arquivo de `CONTAS_ARQUIVO`, fora do repositório e legível só pelo dono; e pode rodar duas vezes. A tarefa que o cria preenche `CONTAS_DE_TESTE` em `deploy/config.env`.
 4. **Remoção de código morto.** Somente os itens de "Candidatos à remoção". Uma tarefa por grupo coeso. Cada tarefa lista exatamente o que sai.
-5. **Estrutura.** Uma tarefa por movimento ou junção, com a lista de arquivos e as referências a atualizar.
-6. **Documentação.** A documentação desatualizada ou órfã não vira tarefa: o documentador corrige no fim, a partir do diagnóstico.
+5. **Slop.** Somente os itens de "Slop" do diagnóstico, menos os de erro engolido. Uma tarefa por tipo de slop em cada área, com a lista exata de arquivo e linha. Duplicação vira uma só, com os chamadores apontando para a que fica; abstração de um uso volta para dentro do chamador.
+6. **Estrutura.** Uma tarefa por movimento ou junção, com a lista de arquivos e as referências a atualizar.
+7. **Documentação.** A documentação desatualizada ou órfã não vira tarefa: o documentador corrige no fim, a partir do diagnóstico.
 
 Todo plano de limpeza tem estes critérios de aceite, além dos específicos:
 
@@ -58,15 +59,16 @@ Todo plano de limpeza tem estes critérios de aceite, além dos específicos:
 
 O primeiro e o terceiro são critérios de processo: quem confere é o orquestrador, pela pilha e pela lista de arquivos do commit, e eles não pedem teste novo. A tarefa `Tipo: banco` não tem o primeiro: a pilha não roda antes dela.
 
-Tarefas que tocam os mesmos arquivos dependem uma da outra. Fora a `Tipo: banco`, que vem antes de tudo, toda tarefa de adequação, remoção ou estrutura depende das tarefas `Tipo: testes` da área que ela toca: a ordem acima não basta, porque o `/fluxo` dispara junto tudo o que não tem dependência. Remoções em áreas distintas podem ser independentes entre si.
+Tarefas que tocam os mesmos arquivos dependem uma da outra. Fora a `Tipo: banco`, que vem antes de tudo, toda tarefa de adequação, remoção, slop ou estrutura depende das tarefas `Tipo: testes` da área que ela toca, menos as de slop que só tiram comentário ou arquivo de trabalho de agente, porque não mexem em código que roda: a ordem acima não basta, porque o `/fluxo` dispara junto tudo o que não tem dependência. Remoções em áreas distintas podem ser independentes entre si.
 
-Fica fora do plano: os "Suspeitos", que viram dúvida para o usuário, e os demais "Riscos", que são dele para resolver.
+Fica fora do plano: os "Suspeitos", que viram dúvida para o usuário, os demais "Riscos", que são dele para resolver, e o erro engolido. Tirar um `except` muda o que o sistema faz quando dá erro, então cada um vira pergunta: o erro deve aparecer, ser tratado de outro jeito ou continuar ignorado de propósito.
 
 ## 4. Perguntas
 
 Antes de entregar, faça ao usuário, uma por vez, em texto, só as perguntas que são dele:
 
 - os "Suspeitos" de código morto, cada um com o que falta confirmar;
+- cada erro engolido do diagnóstico;
 - cada campo em branco dos arquivos base que só ele sabe, como a pasta de produção e o endereço do sistema.
 
 Cada pergunta traz as opções e a recomendada, tirada do diagnóstico. Comando que o inspetor não conseguiu rodar não vira pergunta: fica em branco. Com cada resposta, atualize o arquivo ou o plano na hora. Pergunta que ele pular fica como está e vai para o relatório.
@@ -107,6 +109,7 @@ Mostre ao usuário exatamente isto e pare:
 - Rede de segurança: <n> tarefas de teste em <áreas>
 - Adequação à entrega: <itens>
 - Remoção: <n> itens. <os maiores, em uma linha>
+- Slop: <n> itens, por tipo
 - Estrutura: <movimentos, em uma linha>
 - Documentação: <n> a corrigir, <n> a remover
 

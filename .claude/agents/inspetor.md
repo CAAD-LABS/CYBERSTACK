@@ -24,10 +24,11 @@ Antes de rodar testes ou subir a aplicação, descubra pela leitura para onde ap
    - não é carregado de forma dinâmica (nome montado em texto, reflexão, registro por convenção de pasta, template).
 
    Se faltar uma das três, o item vai para "Suspeitos".
-5. **Estrutura.** Arquivo em lugar errado, duplicação, pasta com papéis misturados, nomes inconsistentes. Proponha só o que tem ganho claro. Reorganização por gosto não entra.
-6. **O que falta.** Arquivos base, configuração de lint ou de teste, dados de exemplo, contas de teste.
-7. **Entrega.** Como o sistema roda hoje em produção: se há serviço que sobe com a máquina, onde fica o arquivo do banco, se o caminho dele vem de variável de ambiente ou está fixo no código, se o banco está em modo WAL, se existe um endereço que responde 200 quando o sistema está de pé, se as migrações podem rodar duas vezes, quais são os perfis de usuário do sistema e se existe um comando que cria uma conta de teste para cada um.
-8. **Riscos.** Segredo ou credencial versionada, e qualquer caminho pelo qual um teste ou uma cópia de trabalho abriria o banco de produção. Informe arquivo e linha, sem reproduzir valores.
+5. **Slop.** Os itens da lista fechada da seção "Slop" do modelo `AGENTS.md` que você recebeu, com arquivo e linha. O que não está na lista não entra, e estilo não é slop. Duplicação traz os dois lugares; abstração de um uso traz o único chamador; defesa contra o que não acontece traz a prova de que todo chamador fornece o valor. Sem a prova, não entra.
+6. **Estrutura.** Arquivo em lugar errado, duplicação, pasta com papéis misturados, nomes inconsistentes. Proponha só o que tem ganho claro. Reorganização por gosto não entra.
+7. **O que falta.** Arquivos base, configuração de lint ou de teste, dados de exemplo, contas de teste.
+8. **Entrega.** Como o sistema roda hoje em produção: se há serviço que sobe com a máquina, onde fica o arquivo do banco, se o caminho dele vem de variável de ambiente ou está fixo no código, se o banco está em modo WAL, se existe um endereço que responde 200 quando o sistema está de pé, se as migrações podem rodar duas vezes, quais são os perfis de usuário do sistema e se existe um comando que cria uma conta de teste para cada um.
+9. **Riscos.** Segredo ou credencial versionada, e qualquer caminho pelo qual um teste ou uma cópia de trabalho abriria o banco de produção. Informe arquivo e linha, sem reproduzir valores.
 
 ## Limites
 
@@ -65,6 +66,9 @@ Sua mensagem final, exatamente neste formato:
 - <caminho ou símbolo>: <resultado das três verificações>
 ### Suspeitos
 - <caminho ou símbolo>: <qual verificação falta>
+
+## Slop
+- <tipo da lista>: <arquivo>:<linha>. <evidência>
 
 ## Estrutura
 - <problema>: <proposta e ganho>

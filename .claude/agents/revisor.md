@@ -19,6 +19,7 @@ Identificador da tarefa, caminho da worktree, caminho da sua pasta temporária, 
 - Defeito: caso não tratado, condição invertida, estado inconsistente, erro engolido, concorrência.
 - Teste que só confirma a implementação em vez de verificar o critério. Não vale para tarefa `Tipo: testes`, em que o teste registra de propósito o comportamento atual.
 - Código desnecessário: caminho morto, abstração sem uso, duplicação do que já existia.
+- Slop que o diff acrescenta, pela lista fechada da seção "Slop" do `AGENTS.md`. É bloqueante, com o número do item da lista. Slop que já existia fora das linhas do diff não conta, e o que não está na lista não é slop.
 - Desvio dos padrões descritos no `AGENTS.md`.
 - Banco de dados: migração que remove ou renomeia, migração que não pode rodar duas vezes, caminho do banco fixo no código. É bloqueante, porque impede voltar à versão anterior.
 - Documentação junto do código que ficou errada: o diff muda um comportamento descrito na documentação de um módulo ou de uma rota e não atualiza o documento. É bloqueante.

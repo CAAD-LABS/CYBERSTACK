@@ -39,6 +39,20 @@ Este é o único arquivo de orientação geral do repositório. Mantenha abaixo 
 - Toda migração pode rodar duas vezes sem erro.
 - Consultas sempre com parâmetros, nunca montando SQL com texto vindo de fora.
 
+## Slop
+
+Slop é código ou arquivo que não muda o que o sistema faz e só deixa o repositório maior e mais difícil de ler. A lista é fechada: o que não está aqui não é slop, e estilo ou preferência de nome não entram.
+
+1. Comentário que repete o que a linha já diz, ou que narra a mudança, como "agora usa X" ou "corrigido".
+2. Função, classe ou bloco que duplica outro que já existe, com outro nome.
+3. Abstração com um uso só: classe, wrapper, fábrica ou parâmetro de configuração sem segunda implementação nem segundo chamador.
+4. Defesa contra o que não acontece: checagem de nulo ou de tipo para um valor que todo chamador fornece, ou `try` em volta de código que não levanta erro.
+5. Erro engolido: `except` que ignora o erro, ou só registra e segue como se nada tivesse acontecido, sem um comentário dizendo por que ele pode ser ignorado.
+6. Código de depuração esquecido: `print` ou log de depuração, e trecho de código comentado.
+7. Arquivo de trabalho de agente versionado: relatório, plano, notas ou script de uso único, sem referência no código e fora da documentação.
+
+Não escreva nada desta lista.
+
 ## Nunca faça
 
 - Não altere nem apague teste existente para fazê-lo passar.

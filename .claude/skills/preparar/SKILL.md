@@ -29,7 +29,7 @@ Crie na pasta de trabalho, a partir dos modelos e do diagnóstico:
 - `.claude/skills/rodar-testes/SKILL.md`, do modelo `rodar-testes.md`.
 - `.claude/skills/verificar-tela/SKILL.md`, do modelo `verificar-tela.md`, somente se o projeto tem interface.
 - A pasta `deploy/`, dos modelos em `modelos/deploy/`. Copie `implantar.sh` e `reverter.sh` sem alterar, com permissão de execução. Preencha `config.env` e a unidade do serviço, salva como `deploy/<nome do serviço>.service`.
-- No `.gitignore`, as linhas `.cyberstack/execucoes/` e `.claude/worktrees/`.
+- No `.gitignore`, as linhas `.cyberstack/execucoes/`, `.claude/worktrees/` e `.venv/`. O ambiente fica fora do git para a pilha de testes reconhecer quando o código de duas cópias é o mesmo.
 
 Regras:
 

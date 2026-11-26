@@ -13,7 +13,7 @@ São dois comandos:
 
 As definições de cada perfil estão em [`.claude/agents/`](.claude/agents) e os dois comandos em [`.claude/skills/`](.claude/skills), neste repositório. Como instalar está [mais abaixo](#instalar).
 
-Situação: desenho fechado e definições escritas. A stack ainda não rodou em um projeto real. Os dois scripts de implantação são exercitados por `testes/implantacao.sh`, com 88 conferências.
+Situação: desenho fechado e definições escritas. O primeiro uso em um projeto real mostrou a pilha de testes sendo repetida sobre código idêntico, e a [pilha de testes sem repetição](#pilha-de-testes-sem-repetição) saiu daí. Os dois scripts de implantação são exercitados por `testes/implantacao.sh`, com 88 conferências, e o script da pilha por `testes/pilha.sh`, com 138.
 
 ## Fluxo completo
 
@@ -262,15 +262,64 @@ O que o orquestrador confere em cada gatilho:
 | Gatilho | Dispara | Condição |
 |---|---|---|
 | Tarefa liberada | Um implementador por tarefa, em paralelo | A tarefa não depende de outra ainda pendente e há vaga no teto de tarefas ao mesmo tempo. |
-| A | Testador | O implementador respondeu PRONTO e a pilha existente passa quando o orquestrador roda o comando. |
+| A | Testador | O implementador respondeu PRONTO e a pilha existente passa quando o orquestrador chama o script da pilha. |
 | B | Revisor, verificador de tela, segurança | O testador aprovou, a pilha completa passa e ele só alterou arquivos nas pastas de teste. |
 | C | Integração | Todos os disparados aprovaram e nenhum deles alterou o código. |
 | D | Entrega | O documentador só alterou as pastas de documentação compartilhada. |
 | E | PR, merge e implantação | Todas as tarefas integradas ou retiradas por você, nenhuma bloqueada, pilha completa passando na integração e entrega automática ligada. |
 
-O orquestrador não aceita relato: ele mesmo roda o comando de teste e olha a lista de arquivos de cada commit. "A pilha passa" quer dizer que não há falha além das que já existiam antes da execução, medidas por ele na branch de integração. Tela e segurança são disparadas pelo que o diff toca, não só pelo que o plano previu.
+O orquestrador não aceita relato: ele mesmo chama o script da pilha, que responde com o comprovante do código que está na cópia ou roda de verdade quando não há comprovante, e olha a lista de arquivos de cada commit. "A pilha passa" quer dizer que não há falha além das que já existiam antes da execução, medidas por ele na branch de integração. Tela e segurança são disparadas pelo que o diff toca, não só pelo que o plano previu.
 
 Tarefa marcada como `Tipo: testes`, usada na rede de segurança da limpeza, não passa pelo implementador: começa direto no testador. Tarefa `Tipo: banco`, que tira do código o caminho fixo do banco, vai sozinha antes de todas, e nada roda antes dela.
+
+## Pilha de testes sem repetição
+
+Cada gatilho confere a pilha de testes, e cada agente a roda antes de entregar. Sem cuidado, a mesma pilha roda várias vezes sobre o mesmo código: o implementador mede a linha de base que o orquestrador já mediu, o orquestrador refaz a rodada que o implementador acabou de fazer, e depois a do testador. No primeiro uso em um projeto real, com uma pilha de 20 minutos, cerca de metade das rodadas foi assim.
+
+Por isso ninguém chama a pilha direto. Orquestrador e subagentes usam o `pilha.sh`, que roda a pilha **uma vez por código**.
+
+```mermaid
+flowchart TD
+    PED["Pedido da pilha<br/>orquestrador ou subagente"]
+    TEM{{"O código da cópia já tem comprovante?"}}
+    LE["Responde com o comprovante<br/>sem rodar"]
+    RODA["Roda a pilha<br/>desligada de quem pediu"]
+    GRAVA["Grava o comprovante<br/>resultado e impressão digital do código"]
+    PASSOU{{"Passou?"}}
+    SEGUE["O gatilho segue"]
+    INST{{"Falha em teste que a tarefa não tocou<br/>e que passa sozinho três vezes?"}}
+    REPETE["Teste instável<br/>anotado, e a pilha repete uma vez"]
+    REP["Reprovação<br/>soma uma tentativa"]
+
+    PED --> TEM
+    TEM -->|sim| LE
+    TEM -->|não| RODA
+    RODA --> GRAVA
+    LE --> PASSOU
+    GRAVA --> PASSOU
+    PASSOU -->|sim| SEGUE
+    PASSOU -->|não| INST
+    INST -->|não| REP
+    INST -->|sim| REPETE
+    REPETE -->|passou| SEGUE
+    REPETE -->|falhou de novo| REP
+```
+
+- **Comprovante.** O script grava o resultado na pasta da execução, junto com a impressão digital do código: o hash de árvore do git sobre o conteúdo da cópia, contando os arquivos versionados e os novos que o git não ignora. Pedido sobre código que já tem comprovante é respondido com ele, sem rodar.
+- **Código é o conteúdo.** Commit ou merge que não muda nenhum arquivo não pede rodada nova. A cópia de uma tarefa nasce igual à integração, então a linha de base do implementador já está pronta. Na integração, a pilha só roda de verdade quando o merge juntou código de outra tarefa.
+- **O orquestrador continua sem aceitar relato.** Em cada gatilho ele mesmo chama o script e lê o comprovante do código que está na cópia. Se o agente entregou sem rodar, ou mexeu no código depois de rodar, não há comprovante e a pilha roda de verdade.
+- **A rodada não morre com quem pediu.** Ela acontece desligada da sessão. Se a chamada for interrompida, ou a sessão cair, a rodada segue até gravar o resultado, e chamar de novo espera por ela em vez de começar outra.
+- **Falha também fica gravada.** Ninguém repete a pilha para ver se passa. As exceções são o teste instável, descrito em [Reprovação e bloqueio](#reprovação-e-bloqueio), e a falha que veio do ambiente e não do código. Só o orquestrador repete, e o script aceita uma repetição por código.
+- **Tempo máximo.** A pilha que passa do limite é encerrada e a falha fica gravada. O limite é três vezes a duração da linha de base; sem ele, duas horas. Uma rodada em curso também pode ser encerrada à mão, com `kill` no processo que o script mostra.
+
+Com isso, uma volta de tarefa roda a pilha de duas a três vezes, em vez de cinco ou seis: depois do implementador, depois do testador e, se o merge mudou o código, na integração.
+
+O que o script precisa do projeto:
+
+- **O ambiente fora do git.** Para o script reconhecer o mesmo código em duas cópias, o `.venv/` tem de estar no `.gitignore`. O `/preparar` cuida disso.
+- **Arquivo que a própria pilha grava.** Se a pilha deixa na cópia um arquivo novo que o git não ignora, como um relatório de cobertura, o script percebe que o conteúdo mudou durante a rodada, não grava comprovante e mostra qual arquivo foi. O orquestrador anota o caminho em `pilhas/ignorar`, o arquivo deixa de contar como código, e a sugestão de pô-lo no `.gitignore` vai no relatório. Cada linha vale como um caminho exato, sem curinga, só alcança arquivo que está fora do git, e a lista fica anotada em cada comprovante.
+- **Submódulo ou repositório aninhado.** Do que está lá dentro o git guarda só o commit, então a impressão digital não é confiável: o script avisa e roda a pilha toda vez.
+- **Ambiente.** O comando da pilha roda com o ambiente de quem chamou. Variável de que a pilha precisa vai escrita no próprio comando.
 
 ## Perfis
 
@@ -297,7 +346,7 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 
 - **Inspetor.** Examina o repositório inteiro e entrega o diagnóstico. Comando que ele não rodou não entra como confirmado. Não roda nada que aponte para o banco ou para as integrações de produção.
 - **Planejador.** Lê o código, roda o sistema se precisar, escreve os critérios de aceite e divide em tarefas. Duas tarefas só são independentes se não tocam os mesmos arquivos. Quando uma tarefa bloqueia, analisa o bloqueio e escreve as perguntas para você.
-- **Implementador.** Roda a pilha antes de começar para ter a linha de base, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature. Pode contestar um teste do testador que considere errado.
+- **Implementador.** Confere a linha de base antes de começar, pelo comprovante da integração, implementa executando e só entrega com a pilha passando. Não altera teste existente para fazê-lo passar e não escreve os testes da feature. Pode contestar um teste do testador que considere errado.
 - **Testador.** Lê os critérios de aceite antes do diff e escreve pelo menos um teste por critério. Se acha defeito, reprova com o teste que falha; não conserta o código.
 - **Revisor.** Procura critério não atendido, defeito, teste que só confirma a implementação, código desnecessário, slop da lista que o diff acrescenta, documentação de módulo desatualizada e alteração indevida nos arquivos de orientação. Todo bloqueante tem arquivo, linha e cenário. Também arbitra teste contestado.
 - **Verificador de tela.** Sobe a aplicação da tarefa em uma porta temporária e a usa pelo navegador, como uma pessoa, com as contas de teste. Tira uma captura por passo e tenta também os caminhos errados. Não consulta banco, API nem código.
@@ -313,6 +362,8 @@ O modelo e o esforço escritos no cabeçalho de `/fluxo` e de `/preparar` valem 
 4. Na terceira tentativa a tarefa é marcada como bloqueada. As outras continuam, menos as que dependem dela, que ficam bloqueadas também.
 
 **Teste contestado.** O implementador não mexe em teste, mas pode contestar um teste do testador que considere errado. O revisor arbitra, uma vez por teste, com o critério de aceite como régua. Teste errado volta ao testador para correção, e a reprovação que ele causou deixa de contar. Teste certo volta ao implementador, sem nova contestação. Se o critério não decide, a tarefa bloqueia e a pergunta vai para você.
+
+**Teste instável.** Falha que não está na linha de base, em teste que a tarefa não criou nem alterou, pode ser de teste que passa sozinho e falha de vez em quando. Antes de reprovar, o orquestrador roda só esse teste três vezes. Se falhar em alguma, é reprovação normal. Se passar nas três, ele anota o teste como instável, o que o leva ao relatório, e repete a pilha uma única vez. Se ela falhar de novo, é reprovação: o teste só falha junto com os outros, e a causa pode estar no código da tarefa. Só o orquestrador repete uma rodada, e o script aceita uma repetição por código; subagente relata a falha e segue.
 
 **Tarefa bloqueada volta para você, na hora.** O planejador analisa o bloqueio e escreve o que travou e a sequência de perguntas necessárias para prosseguir ou para chegar a outra solução. O orquestrador faz essas perguntas a você, uma por vez, sem parar as outras tarefas. Com as respostas, a tarefa é reaberta com tentativas novas, reescrita pelo planejador ou retirada do pedido. Se a execução terminar antes de você responder, as perguntas vão no relatório e nada é entregue até lá.
 
@@ -405,6 +456,12 @@ Tudo o que acontece fica em arquivo, para a execução poder ser retomada e para
     pedido.md                    o pedido, como foi escrito
     plano.md                     critérios de aceite e tarefas
     linha-de-base.md             resultado da pilha antes de qualquer tarefa
+    pilhas/
+      comando                    o comando da pilha, como o script o executa
+      ignorar                    arquivos que a própria pilha grava e que não são código
+      limite                     tempo máximo de uma rodada, em segundos
+      <código>.txt               comprovante: resultado, duração e resumo da rodada
+      <código>.log               saída completa da rodada
     decisoes.md                  o que foi decidido sem perguntar
     aprendizado.md               reprovações e propostas de correção
     documentacao.md              saída do documentador
@@ -532,7 +589,7 @@ Cada roteiro percorrido com sucesso pode virar um teste automatizado de navegado
 
 ## Instalar
 
-Requisitos: Claude Code 2.1.271 ou mais novo, git, python3 e curl. A entrega automática usa systemd e, quando leva o trabalho à principal por pull request, o `gh`. O verificador de tela precisa de uma ferramenta de navegador na sessão.
+Requisitos: Claude Code 2.1.271 ou mais novo, git, python3 e curl, e os programas `flock`, `setsid` e `timeout`, que toda distribuição Linux traz. A entrega automática usa systemd e, quando leva o trabalho à principal por pull request, o `gh`. O verificador de tela precisa de uma ferramenta de navegador na sessão.
 
 ```bash
 git clone https://github.com/CAAD-LABS/CYBERSTACK.git
@@ -541,7 +598,7 @@ cd CYBERSTACK
 ./instalar.sh --global              # em ~/.claude, para todos os projetos
 ```
 
-O instalador copia os 19 arquivos para `.claude/agents/` e `.claude/skills/` do destino e confere cada um pelo SHA-256. Arquivo que já existe no destino e está diferente é mantido, a não ser com `--sobrescrever`. Ele não cria `AGENTS.md`, `CLAUDE.md` nem `.cyberstack/projeto.md`, que nascem no `/preparar`, e não faz commit.
+O instalador copia os 20 arquivos para `.claude/agents/` e `.claude/skills/` do destino e confere cada um pelo SHA-256. Arquivo que já existe no destino e está diferente é mantido, a não ser com `--sobrescrever`. Ele não cria `AGENTS.md`, `CLAUDE.md` nem `.cyberstack/projeto.md`, que nascem no `/preparar`, e não faz commit.
 
 Se você é um agente instalando a stack: use o `instalar.sh` em vez de copiar os arquivos à mão; se o usuário não disse, pergunte se a instalação é no projeto ou para todos os projetos; não crie os arquivos base, não faça commit e termine dizendo ao usuário para abrir uma sessão nova na raiz do projeto e rodar `/preparar`.
 
@@ -551,10 +608,11 @@ Se você é um agente instalando a stack: use o `instalar.sh` em vez de copiar o
 |---|---|
 | [`.claude/agents/`](.claude/agents) | Os nove perfis de subagente: inspetor, planejador, implementador, testador, revisor, verificador de tela, segurança, documentador e ponte. |
 | [`.claude/skills/preparar/`](.claude/skills/preparar) | O comando `/preparar` e os modelos dos arquivos base que ele cria no projeto, incluindo os scripts de implantação e de reversão. |
-| [`.claude/skills/fluxo/`](.claude/skills/fluxo) | O comando `/fluxo`, que é o orquestrador. |
+| [`.claude/skills/fluxo/`](.claude/skills/fluxo) | O comando `/fluxo`, que é o orquestrador, e o `pilha.sh`, que roda a pilha de testes uma vez por código. |
 | [`instalar.sh`](instalar.sh) | Instala a stack em um projeto ou na pasta pessoal e confere os arquivos. |
 | [`SHA256SUMS`](SHA256SUMS) | O SHA-256 de cada arquivo da stack. |
 | [`testes/implantacao.sh`](testes/implantacao.sh) | Teste dos scripts de implantação e de reversão em um projeto de brinquedo. |
+| [`testes/pilha.sh`](testes/pilha.sh) | Teste do script da pilha em um repositório de brinquedo. |
 | [`LICENSE`](LICENSE) | A licença MIT. |
 
 Os caminhos dentro de `.claude/` são os mesmos em que os arquivos ficam depois de instalados.
@@ -565,6 +623,7 @@ Os caminhos dentro de `.claude/` são os mesmos em que os arquivos ficam depois 
 ./instalar.sh --conferir                       # os arquivos daqui batem com o SHA256SUMS?
 ./instalar.sh --conferir /caminho/do/projeto   # e os instalados naquele projeto?
 testes/implantacao.sh                          # exercita implantar.sh e reverter.sh
+testes/pilha.sh                                # exercita pilha.sh
 ```
 
 ## Mudar a stack
@@ -572,7 +631,7 @@ testes/implantacao.sh                          # exercita implantar.sh e reverte
 Os arquivos de `.claude/` deste repositório são a fonte. Depois de mudar um deles:
 
 1. rode `./instalar.sh --somas`, que regrava o `SHA256SUMS`;
-2. rode `testes/implantacao.sh`, se mexeu nos scripts;
+2. rode `testes/implantacao.sh` e `testes/pilha.sh`, se mexeu nos scripts;
 3. atualize este README, inclusive os fluxogramas, se o comportamento mudou.
 
 Um projeto que já tem a stack instalada só recebe a mudança quando o `instalar.sh` roda de novo nele.

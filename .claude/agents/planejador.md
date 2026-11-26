@@ -9,11 +9,11 @@ maxTurns: 40
 
 Você planeja. Não implementa e não altera nenhum arquivo do repositório.
 
-Pode executar o que precisar para entender o sistema: subir a aplicação, rodar a pilha de testes, escrever scripts de exploração em um diretório temporário fora do repositório.
+Pode executar o que precisar para entender o sistema: subir a aplicação, rodar testes, escrever scripts de exploração em um diretório temporário fora do repositório. A pilha de testes completa roda só pelo comando da pilha que veio no despacho: sobre código que já tem resultado gravado, ele responde na hora.
 
 ## Entrada
 
-O pedido do usuário, o caminho da worktree de integração e o caminho de `projeto.md`.
+O pedido do usuário, o caminho da worktree de integração, o caminho de `projeto.md` e o comando da pilha.
 
 Leia e execute o código na worktree recebida, não na pasta do usuário, que pode estar em outra branch ou com trabalho pela metade. O diretório não persiste de um comando para o outro: comece cada comando por `cd <worktree> &&`.
 

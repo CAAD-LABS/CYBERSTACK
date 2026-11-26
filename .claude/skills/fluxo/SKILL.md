@@ -17,6 +17,7 @@ Você é o orquestrador. Você divide o trabalho, dispara subagentes, confere os
 - `.cyberstack/projeto.md`: configuração do fluxo (pastas de teste, documentação compartilhada, áreas sensíveis, entrega).
 - `.cyberstack/execucoes/<slug>/`: pasta desta execução. O `<slug>` é a data de hoje e o pedido em poucas palavras, em minúsculas e com hífens, como `2026-01-31-exportar-relatorio`. Contém `pedido.md`, com o pedido como foi escrito, `plano.md`, `linha-de-base.md`, `decisoes.md`, `aprendizado.md`, `documentacao.md`, `entrega.md`, `relatorio.md` e uma pasta por tarefa.
 - `.cyberstack/execucoes/<slug>/<tarefa>/`: `estado.json` e a saída de cada agente, uma por volta: `entrega-<volta>.md`, `testes-<volta>.md`, `revisao-<volta>.md`, `tela-<volta>.md`, `seguranca-<volta>.md` e a pasta `capturas-<volta>`. Se a tarefa bloquear, também `bloqueio-<volta>.md` e `respostas-<volta>.md`; se um teste for contestado, `arbitragem-<volta>.md`. Nada é sobrescrito. No resto deste texto esses nomes aparecem sem o número, para encurtar.
+- `.cyberstack/execucoes/<slug>/pilhas/`: os comprovantes da pilha de testes, um por código, e o arquivo `comando`, com o comando da pilha.
 - `.claude/worktrees/<slug>-integracao/`: cópia do código onde a integração acontece.
 - `.claude/worktrees/<slug>-<tarefa>/`: cópia do código de cada tarefa.
 - Branches: `fluxo/<slug>/integracao` e `fluxo/<slug>/<tarefa>`.
@@ -33,12 +34,41 @@ Formato de `estado.json`:
 
 Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `bloqueada`, `retirada`. Atualize o arquivo a cada transição.
 
+## A pilha de testes roda uma vez por código
+
+Ninguém chama a pilha completa direto. Você e os subagentes usam o comando da pilha:
+
+```
+${CLAUDE_SKILL_DIR}/pilha.sh <pasta desta execução>/pilhas <worktree>
+```
+
+O script executa, de dentro da worktree, o comando que está em `pilhas/comando`, e grava o resultado como comprovante, junto com a impressão digital do código. Pedido sobre código que já tem comprovante é respondido com ele, na hora, sem rodar. Código é o conteúdo da worktree: arquivos versionados e arquivos novos que o git não ignora. Um commit ou um merge que não muda nenhum arquivo não pede rodada nova.
+
+Neste texto, "rode a pilha" quer dizer chamar o script. Conferir um gatilho logo depois de um agente que rodou a pilha não custa nada, e a regra de não aceitar relato continua de pé: o que você lê é o comprovante do código que está na worktree, gravado pelo script, e não a mensagem do agente. Se o agente entregou sem rodar, ou mexeu no código depois de rodar, não há comprovante e o script roda de verdade.
+
+Três arquivos de `pilhas/` são seus:
+
+- `comando`: o comando da pilha completa do `AGENTS.md`. Na tarefa `Tipo: banco`, ele leva `BANCO` apontando para um arquivo dentro da worktree, em caminho relativo, porque o script o executa de dentro dela. O comando roda com o ambiente de quem chamou: variável de que a pilha precisa vai escrita nele. Se ele mudar durante a execução, regrave o arquivo e registre em `decisoes.md`: comprovante de um comando não vale para outro.
+- `ignorar`: os arquivos novos que a própria pilha grava na worktree e que não são código. Um caminho por linha, contado da raiz da worktree, como o script mostra, e sem curinga. O arquivo de `BANCO` da tarefa `Tipo: banco` entra aqui. Nunca ponha código nem teste nesta lista: o que está nela não entra na impressão digital enquanto estiver fora do git.
+- `limite`: o tempo máximo de uma rodada, um número inteiro de segundos. Sem ele, o script encerra a pilha depois de duas horas. Depois de medir a linha de base, grave três vezes a duração dela.
+
+O que o script devolve:
+
+- Saída 0: passou. Saída 1: falhou, e o caminho do registro completo vem na saída. Pilha encerrada por passar do tempo máximo é falha.
+- Saída 3: o código mudou enquanto a pilha rodava, e a saída lista o que mudou. Se foi um agente mexendo na worktree, chame de novo. Se foi a própria pilha que gravou arquivo novo, como um relatório de cobertura, ponha o caminho em `pilhas/ignorar`, registre em `decisoes.md` e chame de novo: é esse registro que leva ao usuário a sugestão de pôr o arquivo no `.gitignore`. Se a pilha altera arquivo versionado, não há o que ignorar: daí até o fim da execução, rode o comando de `pilhas/comando` direto, entregue aos subagentes esse comando no lugar do comando da pilha e registre em `decisoes.md`.
+- Saída 4: a rodada foi interrompida antes de gravar o resultado. Chame de novo.
+- A rodada não depende de quem chamou. Se a sua chamada for interrompida, ou a sessão cair, ela segue até gravar o resultado. Chamar de novo espera a rodada em curso: nunca comece outra por fora. Para encerrar uma rodada, use `kill` no processo que a espera mostra.
+- Worktree com submódulo ou repositório aninhado não tem impressão digital confiável: o script avisa e roda a pilha toda vez. Registre em `decisoes.md`.
+
+`--de-novo` repete a rodada sobre o mesmo código e guarda o comprovante anterior. Só você usa, em dois casos: teste instável, na seção 4, e falha que veio do ambiente e não do código, como programa não encontrado ou tempo máximo estourado com a máquina sobrecarregada, depois de corrigir a causa. O script aceita uma repetição por código: pedida outra vez, responde com o comprovante que existe.
+
 ## 1. Preparação
 
 1. Confira que o `AGENTS.md` tem o comando da pilha de testes e que `.cyberstack/projeto.md` tem as pastas de teste. Se faltar um dos dois, pare e diga ao usuário para rodar `/preparar` ou preencher os arquivos.
 2. Procure em `.cyberstack/execucoes/` uma execução que não terminou e cujo `pedido.md` seja este pedido, ou que o usuário mandou continuar. Terminada é a que tem `relatorio.md` e nenhuma tarefa `bloqueada` esperando resposta. Se não houver, crie a pasta com o slug de hoje e grave o pedido em `pedido.md`. Se houver, leia os `estado.json` e continue de onde parou, em vez de recomeçar:
    - A saída que vale para cada tarefa é a da volta que está no `estado.json`. Saída de volta anterior é histórico.
    - Tarefa que estava no meio de um agente, sem a saída da volta atual: dispare de novo o mesmo agente, na mesma worktree, dizendo que é retomada e que pode haver trabalho pela metade.
+   - Pilha que estava rodando quando a execução parou: chame o script de novo. Ele espera a rodada, se ela ainda estiver em curso, ou responde com o comprovante.
    - Tarefa `bloqueada` que tem `bloqueio.md` e ainda espera resposta: volte a fazer as perguntas ao usuário.
    - Antes de refazer um passo da entrega, veja se ele já aconteceu: PR já mesclado, commit já em produção.
 3. Compare o commit que está em produção, lido na pasta de produção de `projeto.md`, com a ponta da branch principal. Se houver remoto, busque antes e use a ponta do remoto. Se `projeto.md` ainda não tem pasta de produção, pule este passo. Se os dois commits forem iguais, siga. Se o commit em produção não estiver no histórico da principal, pare e avise o usuário. Nos demais casos a principal está à frente da produção: descubra o motivo no registro de implantações (`deploy/reverter.sh --listar`, na pasta de produção) antes de mexer em qualquer coisa:
@@ -49,7 +79,7 @@ Estados: `implementando`, `testando`, `verificando`, `aprovada`, `integrada`, `b
    Sincronizar é criar um commit que devolve à principal o conteúdo exato do commit em produção: `git commit-tree <produção>^{tree} -p <principal> -m "Volta a principal ao conteúdo de <produção>"`. Não use `git revert` de um intervalo: ele falha quando há merge no meio, e a integração produz merges. Confira que o conteúdo ficou idêntico (`git diff --quiet <produção> <commit novo>`), leve o commit à principal do jeito que `projeto.md` indica e implante. O conteúdo é o mesmo; só o registro muda. Se a conferência falhar, pare e avise o usuário.
 
    Grave o commit de sincronização em `decisoes.md`. Se o pedido for corrigir o que saiu do ar, a primeira tarefa do plano desfaz esse commit na integração (`git revert <commit de sincronização>`), para o trabalho recomeçar de onde estava; diga isso ao planejador.
-4. Use como base a ponta da principal conferida no passo anterior, a do remoto se houver. Crie a branch `fluxo/<slug>/integracao` a partir dela, já em uma worktree própria. Uma worktree nova não traz o `.venv`: rode nela o comando de instalar dependências do `AGENTS.md`. Se o plano do pedido começa por uma tarefa `Tipo: banco`, não rode a pilha ainda, porque o código abre o banco de produção: a linha de base é medida quando essa tarefa integrar. Nos outros casos, rode a pilha completa e grave o resultado, com os nomes dos testes que falham, em `linha-de-base.md`. Crie também `decisoes.md` e `aprendizado.md`, vazios.
+4. Use como base a ponta da principal conferida no passo anterior, a do remoto se houver. Crie a branch `fluxo/<slug>/integracao` a partir dela, já em uma worktree própria. Uma worktree nova não traz o `.venv`: rode nela o comando de instalar dependências do `AGENTS.md`. Crie a pasta `pilhas/` e grave nela o arquivo `comando`. Se o plano do pedido começa por uma tarefa `Tipo: banco`, não rode a pilha ainda, porque o código abre o banco de produção: a linha de base é medida quando essa tarefa integrar. Nos outros casos, rode a pilha completa, grave o resultado, com os nomes dos testes que falham, em `linha-de-base.md`, e grave `pilhas/limite`. Crie também `decisoes.md` e `aprendizado.md`, vazios.
 5. Se o pedido aponta para um plano já escrito, como o do `/preparar`, copie-o para `plano.md` e não dispare o planejador. Caso contrário, dispare o `planejador`, com o caminho da worktree de integração, e grave a saída em `plano.md`. Para um pedido pequeno e localizado, escreva você mesmo um plano de uma tarefa, com critérios de aceite, no mesmo formato.
 
 ## 2. Disparo das tarefas
@@ -64,17 +94,17 @@ Respeite o teto. Conta como em andamento a tarefa em `implementando`, `testando`
 
 Tarefa com a linha `Tipo: testes` no plano não passa pelo implementador: comece pelo testador, e o Gatilho A não se aplica. Se ela for reprovada, a volta também é para o testador.
 
-Tarefa com a linha `Tipo: banco` tira do código o caminho fixo do banco. Ela vai sozinha, antes de todas as outras, e nada roda antes dela: diga ao implementador que não execute a pilha nem a aplicação antes de fazer a mudança. O Gatilho A dela exige `RESULTADO: PRONTO` e a pilha rodando com `BANCO` apontando para um arquivo da worktree; como ainda não há linha de base, falha de teste que já existia não reprova, e quem julga a mudança são o testador e o revisor. Quando ela integrar, rode a pilha na worktree de integração, grave `linha-de-base.md` e só então libere as outras tarefas.
+Tarefa com a linha `Tipo: banco` tira do código o caminho fixo do banco. Ela vai sozinha, antes de todas as outras, e nada roda antes dela: diga ao implementador que não execute a pilha nem a aplicação antes de fazer a mudança. O Gatilho A dela exige `RESULTADO: PRONTO` e a pilha rodando com `BANCO` apontando para um arquivo da worktree; como ainda não há linha de base, falha de teste que já existia não reprova, e quem julga a mudança são o testador e o revisor. Quando ela integrar, regrave `pilhas/comando` se o comando da pilha passou a ser outro, rode a pilha na worktree de integração, grave `linha-de-base.md` e `pilhas/limite`, e só então libere as outras tarefas.
 
 Em todos os gatilhos, "a pilha passa" quer dizer que não há falha além das que estão em `linha-de-base.md`. Vale a linha de base que você mediu, não a do relato de um agente.
 
 **Implementador.** Grave a saída em `entrega.md`.
 
-Gatilho A, para disparar o testador: a saída diz `RESULTADO: PRONTO` e a pilha de testes passa quando você mesmo roda o comando na worktree. Não aceite o relato sem rodar. Falhas que já estavam na linha de base não contam, nem as dos testes que a entrega lista em "Testes obsoletos": esses quem ajusta é o testador. Em tarefa de limpeza, confira também que o commit só altera arquivos da lista da tarefa.
+Gatilho A, para disparar o testador: a saída diz `RESULTADO: PRONTO` e a pilha de testes passa quando você mesmo chama o script na worktree. Não aceite o relato: vale o comprovante. Falhas que já estavam na linha de base não contam, nem as dos testes que a entrega lista em "Testes obsoletos": esses quem ajusta é o testador. Em tarefa de limpeza, confira também que o commit só altera arquivos da lista da tarefa.
 
 **Testador.** Dispare o `testador`. Grave a saída em `testes.md`.
 
-Gatilho B, para disparar a verificação: a saída diz `VEREDITO: APROVADO`, a pilha completa passa quando você roda, e os arquivos alterados pelo testador estão todos nas pastas de teste de `projeto.md`. Para saber o que ele gravou, anote a ponta da branch antes de disparar e compare depois (`git diff --name-only <antes>..HEAD`).
+Gatilho B, para disparar a verificação: a saída diz `VEREDITO: APROVADO`, a pilha completa passa quando você chama o script, e os arquivos alterados pelo testador estão todos nas pastas de teste de `projeto.md`. Para saber o que ele gravou, anote a ponta da branch antes de disparar e compare depois (`git diff --name-only <antes>..HEAD`).
 
 **Verificação.** Dispare na mesma mensagem, em paralelo:
 
@@ -104,6 +134,16 @@ Um `VEREDITO: BLOQUEADO` do verificador de tela por falta de navegador não repr
 
 Saída sem a linha de `RESULTADO` ou de `VEREDITO` quer dizer que o agente parou no teto de turnos antes de concluir. Isso não é reprovação: retome o mesmo agente para ele terminar. Se depois de duas retomadas a linha ainda não vier, marque a tarefa como `bloqueada`, com esse motivo.
 
+### Teste instável
+
+Falha que não está na linha de base, em teste que a tarefa não criou nem alterou, pode ser de teste instável: passa sozinho e falha de vez em quando. Antes de reprovar por ela:
+
+1. Rode só esse teste, três vezes, na worktree.
+2. Falhou em alguma das três: é reprovação, pelo caminho normal.
+3. Passou nas três: registre o teste como instável em `decisoes.md` e repita a pilha uma vez, com `--de-novo`. Se a pilha passar, o gatilho segue com o comprovante novo e nada soma em `tentativas`. Se falhar de novo, é reprovação: o teste só falha junto com os outros, e a causa pode estar no código da tarefa.
+
+A repetição acontece uma vez por código, e só você a faz: o script recusa a segunda. Subagente que encontra uma falha assim relata e não repete a rodada. O registro em `decisoes.md` é o que leva o teste instável ao usuário no relatório.
+
 ### Teste contestado
 
 O implementador pode responder `RESULTADO: CONTESTADO` quando voltou por um teste do testador que ele considera errado. Isso não é reprovação e não soma tentativa.
@@ -131,7 +171,7 @@ Se a execução chegar ao fim antes das respostas, as perguntas que faltam vão 
 
 ## 5. O que cada subagente recebe
 
-O bloco inteiro da tarefa, copiado do plano, com o identificador e o tipo; o número da volta; caminho absoluto da worktree, da pasta de artefatos e de `projeto.md`; para o verificador de tela, a pasta de capturas da volta; os critérios de aceite da tarefa; para o testador, a entrega do implementador; para testador, revisor e segurança, o comando que mostra o diff contra a branch de integração; e, para revisor, verificador de tela e segurança, a pasta temporária de cada um.
+O bloco inteiro da tarefa, copiado do plano, com o identificador e o tipo; o número da volta; caminho absoluto da worktree, da pasta de artefatos e de `projeto.md`; para o verificador de tela, a pasta de capturas da volta; os critérios de aceite da tarefa; para planejador, implementador e testador, o comando da pilha já montado, com os caminhos absolutos do script, da pasta `pilhas/` e da worktree; para revisor e segurança, o caminho do comprovante da pilha deste código, que você leu no Gatilho B, ou o da saída que você guardou, se a pilha rodou direto; para o testador, a entrega do implementador; para testador, revisor e segurança, o comando que mostra o diff contra a branch de integração; e, para revisor, verificador de tela e segurança, a pasta temporária de cada um.
 
 Um subagente começa na pasta do usuário, não na worktree, e o diretório dele não persiste de um comando para o outro. Diga em todo despacho que cada comando começa por `cd <worktree> &&`.
 
@@ -142,7 +182,7 @@ Nunca repasse a conversa ou o raciocínio de outro agente. O revisor não vê o 
 Na worktree de integração, uma tarefa aprovada por vez:
 
 1. Faça merge da branch da tarefa em `fluxo/<slug>/integracao`. Se der conflito, aborte o merge e trate como reprovação, com os arquivos em conflito como motivo.
-2. Rode a pilha completa.
+2. Rode a pilha completa. Se o merge não mudou o código, porque nada mais foi integrado desde que a tarefa saiu da integração, o comprovante da tarefa responde na hora.
 3. Passou: marque `integrada` e remova a worktree da tarefa. Falhou: desfaça o merge e trate como reprovação, com a saída da falha como motivo.
 
 Uma tarefa reprovada aqui passava sozinha e só falha junto com as outras. Antes de devolvê-la ao implementador, faça na worktree dela o merge da branch de integração atual, para ele trabalhar sobre o código já integrado. Se esse merge der conflito, deixe o conflito na worktree e diga no motivo que resolver é com ele.

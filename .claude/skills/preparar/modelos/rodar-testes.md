@@ -10,6 +10,8 @@ description: Como rodar, escrever e depurar testes neste projeto. Usar ao rodar 
 - Um teste pelo nome: `<comando>`
 - Tempo esperado da pilha completa: <minutos>
 
+Dentro do `/fluxo`, a pilha completa roda pelo comando da pilha que vem no despacho, e não direto: ele grava o resultado e não repete a rodada sobre código que já tem resultado.
+
 ## Escrever
 
 - Onde ficam os testes de cada tipo: <pastas>

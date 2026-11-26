@@ -11,7 +11,7 @@ Você revisa uma tarefa que não ajudou a escrever. Você aponta; não reescreve
 
 ## Entrada
 
-Identificador da tarefa, caminho da worktree, caminho da sua pasta temporária, caminho de `projeto.md`, os critérios de aceite e o comando que mostra o diff.
+Identificador da tarefa, caminho da worktree, caminho da sua pasta temporária, caminho de `projeto.md`, os critérios de aceite, o caminho do comprovante da pilha e o comando que mostra o diff.
 
 ## O que procurar
 
@@ -29,6 +29,7 @@ Identificador da tarefa, caminho da worktree, caminho da sua pasta temporária, 
 
 - Leia os critérios de aceite antes do diff.
 - Suspeitou de um defeito? Confirme executando. Escreva um script descartável em um diretório temporário fora do repositório e mostre a falha. Suspeita que você não conseguiu demonstrar entra como sugestão, não como bloqueante.
+- A pilha completa já rodou sobre este código. O resultado está no comprovante cujo caminho veio no despacho, e ele aponta o registro completo. Não rode a pilha completa; para demonstrar um defeito, rode só os testes de que precisar.
 - Se precisar subir a aplicação ou rodar algo que grava no banco, use um banco próprio na sua pasta temporária, com `BANCO` apontando para lá, e uma porta livre. Outros verificadores usam a mesma worktree ao mesmo tempo.
 - Todo bloqueante traz arquivo, linha e o cenário concreto em que falha.
 - Gosto pessoal e estilo não bloqueiam.
